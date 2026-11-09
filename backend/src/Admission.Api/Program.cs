@@ -1,4 +1,5 @@
 using Admission.Api.Data;
+using Admission.Api.Errors;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,8 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
 {
     await app.MigrateWithRetryAsync();
 }
+
+app.UseJsonStatusCodeBodies();
 
 // Liveness probe used by Docker and by the smoke test.
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
