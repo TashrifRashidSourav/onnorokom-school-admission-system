@@ -16,7 +16,7 @@ If the time runs out, the seat is released automatically for the next applicant.
 
 ## Quick start
 
-_(pending #4)_
+Only [Docker](https://docs.docker.com/get-docker/) (with Compose v2) is required.
 
 ```bash
 git clone https://github.com/TashrifRashidSourav/onnorokom-school-admission-system.git
@@ -24,24 +24,35 @@ cd onnorokom-school-admission-system
 docker compose up --build
 ```
 
+The first build takes a few minutes. When the logs settle, open:
+
 | Service | URL |
 |---|---|
-| Frontend | http://localhost:3000 |
-| Backend API | http://localhost:8080 |
-| PostgreSQL | `localhost:5432` (inside compose: `db:5432`) |
+| **Frontend** | **http://localhost:3000** |
+| Backend API | http://localhost:8080 (health check: `/health`) |
+| PostgreSQL | `localhost:5432`, database/user/password `admission` (inside compose: `db:5432`) |
 
-Stop with `docker compose down`. Data is kept in a named volume and survives `down` / `up`.
-`docker compose down -v` deletes it.
+The backend starts only after PostgreSQL reports healthy.
+
+| Command | Effect |
+|---|---|
+| `docker compose up -d --build` | Start in the background |
+| `docker compose logs -f backend` | Follow backend logs |
+| `docker compose down` | Stop. Data is kept in the `pgdata` volume and is still there after the next `up` |
+| `docker compose down -v` | Stop **and delete all data** |
 
 ## Configuration
 
-All settings come from environment variables. Defaults are in `docker-compose.yml`; override them in a `.env` file (see [`.env.example`](.env.example)).
+All settings come from environment variables with defaults in `docker-compose.yml`, so no `.env` file is needed. To change something, copy [`.env.example`](.env.example) to `.env` and edit it.
 
-| Variable | Used by | Default | Purpose |
-|---|---|---|---|
-| `ConnectionStrings__Default` | backend | points at the `db` service | PostgreSQL connection |
-| `HOLD_DURATION_SECONDS` | backend | `600` | How long a seat stays held before it expires |
-| `API_URL` | frontend | `http://localhost:8080` | Backend URL used by the browser, applied at container start (no rebuild) |
+| Variable | Default | Purpose |
+|---|---|---|
+| `HOLD_DURATION_SECONDS` | `600` | How long a seat stays held before it expires |
+| `API_URL` | `http://localhost:8080` | Backend URL the browser uses; written into `config.js` when the frontend container starts, so no rebuild is needed |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `admission` | Database settings; the backend's connection string (`ConnectionStrings__Default`) is built from them |
+| `FRONTEND_PORT` / `BACKEND_PORT` / `DB_PORT` | `3000` / `8080` / `5432` | Host ports, in case one is already in use |
+
+Example: `HOLD_DURATION_SECONDS=30 docker compose up -d` makes holds expire after 30 seconds, which is handy for trying out expiry.
 
 ## Running the tests
 
