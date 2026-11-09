@@ -9,6 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AdmissionDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
+// Unhandled exceptions become JSON error bodies (see ApiExceptionHandler).
+// AddProblemDetails is required by UseExceptionHandler(); our handler always answers first.
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
 // Creates or updates the schema on startup. Tests that run without a database
@@ -18,6 +23,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
     await app.MigrateWithRetryAsync();
 }
 
+app.UseExceptionHandler();
 app.UseJsonStatusCodeBodies();
 
 // Liveness probe used by Docker and by the smoke test.
