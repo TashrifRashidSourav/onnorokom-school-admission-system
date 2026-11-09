@@ -1,10 +1,9 @@
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 import { AdminLayout } from './layouts/AdminLayout'
 import { ParentLayout } from './layouts/ParentLayout'
 import { AdminClassesPage } from './pages/admin/AdminClassesPage'
 import { ApplicationPage } from './pages/ApplicationPage'
 import { ClassListPage } from './pages/ClassListPage'
-import { CreateClassPage } from './pages/CreateClassPage'
 import { MyApplicationsPage } from './pages/MyApplicationsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
@@ -22,7 +21,8 @@ export default function App() {
       {/* School admin console: its own layout, no student ID. */}
       <Route path="admin" element={<AdminLayout />}>
         <Route index element={<AdminClassesPage />} />
-        <Route path="classes/new" element={<CreateClassPage />} />
+        {/* Old create-class page: now the New class dialog on the admin home. */}
+        <Route path="classes/new" element={<Navigate to="/admin?new=1" replace />} />
         <Route path="*" element={<NotFoundPage homePath="/admin" homeLabel="Go to the admin console" />} />
       </Route>
     </Routes>

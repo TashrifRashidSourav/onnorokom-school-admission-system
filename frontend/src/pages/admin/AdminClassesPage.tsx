@@ -14,6 +14,7 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
+import { useSearchParams } from 'react-router'
 import { NewClassDialog } from '../../admin/NewClassDialog'
 import type { CreatedClass } from '../../api/types'
 
@@ -24,9 +25,17 @@ const columns = ['Class', 'Total', 'Confirmed', 'Held', 'Available']
  * The rows are filled from the class list API once it exists (PLAN step 13).
  */
 export function AdminClassesPage() {
-  const [dialogOpen, setDialogOpen] = useState(false)
+  // ?new=1 (the old /admin/classes/new link redirects here) opens the dialog right away.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [dialogOpen, setDialogOpen] = useState(searchParams.get('new') === '1')
   const [lastCreated, setLastCreated] = useState<CreatedClass | null>(null)
   const openDialog = () => setDialogOpen(true)
+  const closeDialog = () => {
+    setDialogOpen(false)
+    if (searchParams.has('new')) {
+      setSearchParams({}, { replace: true })
+    }
+  }
 
   return (
     <Box component="section">
@@ -84,7 +93,7 @@ export function AdminClassesPage() {
         </Table>
       </TableContainer>
 
-      <NewClassDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onCreated={setLastCreated} />
+      <NewClassDialog open={dialogOpen} onClose={closeDialog} onCreated={setLastCreated} />
 
       {/* Confirmation that does not push the table down; closes by itself. */}
       <Snackbar
