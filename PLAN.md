@@ -183,7 +183,7 @@ git switch main && git pull
 
 ### Docker
 
-- Compose has 3 services: `db` (healthcheck + volume), `backend` (waits for DB, port 8080), `frontend` (nginx serving the build).
+- Compose has 3 services: `db` (healthcheck + volume), `backend` (waits for DB, port 8080), `frontend` (nginx serving the build, **http://localhost:3000**).
 - Backend config via `ConnectionStrings__Default` and `HOLD_DURATION_SECONDS` (default 600).
 - Frontend backend-URL: **runtime** `config.js` written by the container entrypoint from `API_URL`, because plain Vite bakes env vars at build time.
 - CORS enabled on the backend.
@@ -219,6 +219,10 @@ Each row is one issue → one branch → one PR. The commit list is the plan; re
 | 11 | `feat/11-hold-confirm` | backend | `feat(api): add POST /holds/{id}/confirm` · `feat(api): make confirm idempotent` · `test(api): confirm twice counts one seat` |
 | 12 | `feat/12-hold-expiry` | backend | `feat(api): read hold duration from HOLD_DURATION_SECONDS` · `feat(api): treat past-due holds as expired on read` · `feat(api): add background expiry sweeper` · `test(api): expired hold frees seat and cannot be confirmed` |
 | 13 | `test/13-concurrency-test` | backend, test | `test(api): 200 parallel holds on a 10-seat class` · `test(api): parallel duplicate holds by one student` |
+
+| 23 | `docs/23-docs-foundation` | docs | `docs: add README skeleton` · `docs: add ASSUMPTIONS with decisions made so far` · `docs: add AI_USAGE log` · `docs: add CONTRIBUTING with branch, commit and PR rules` |
+
+(#22 is the PR number of issue 1. Issue 23 was added after planning, so docs grow with the code instead of being written at the end.)
 
 → Close M1, tag **`v0.1.0`**.
 
