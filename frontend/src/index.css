@@ -1,51 +1,30 @@
+/*
+ * Page basics (font, background, box-sizing, light/dark) come from the MUI theme
+ * and CssBaseline. These aliases point the remaining hand-written styles at the
+ * theme's CSS variables, so they follow the same palette in light and dark mode.
+ */
 :root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --text: #1c2330;
-  --muted: #5c6675;
-  --border: #dde1e7;
-  --primary: #1d5fbf;
-  --primary-contrast: #ffffff;
-  --danger: #b42318;
-  --danger-bg: #fef3f2;
-  --success: #067647;
-  --success-bg: #ecfdf3;
-
-  font-family: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Bengali', sans-serif;
-  line-height: 1.5;
-  color: var(--text);
-  background: var(--bg);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #12161d;
-    --surface: #1a2029;
-    --text: #e6e9ee;
-    --muted: #9aa4b2;
-    --border: #2c3542;
-    --primary: #5b9bf0;
-    --primary-contrast: #0b1220;
-    --danger: #f97066;
-    --danger-bg: #2a1614;
-    --success: #47cd89;
-    --success-bg: #0f2a1d;
-  }
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+  --bg: var(--mui-palette-background-default);
+  --surface: var(--mui-palette-background-paper);
+  --text: var(--mui-palette-text-primary);
+  --muted: var(--mui-palette-text-secondary);
+  --border: var(--mui-palette-divider);
+  --primary: var(--mui-palette-primary-main);
+  --primary-contrast: var(--mui-palette-primary-contrastText);
+  --danger: var(--mui-palette-error-main);
+  --danger-bg: rgba(var(--mui-palette-error-mainChannel) / 0.08);
+  --success: var(--mui-palette-success-main);
+  --success-bg: rgba(var(--mui-palette-success-mainChannel) / 0.08);
 }
 
 body {
-  margin: 0;
   min-height: 100vh;
 }
 
 h1 {
-  font-size: 1.6rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0 0 0.5rem;
 }
 
