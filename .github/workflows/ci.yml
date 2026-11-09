@@ -21,6 +21,23 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    # Real PostgreSQL for the database tests (same image as docker-compose.yml).
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: admission_test
+          POSTGRES_USER: admission
+          POSTGRES_PASSWORD: admission
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U admission -d admission_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      TEST_DB_CONNECTION: Host=localhost;Port=5432;Database=admission_test;Username=admission;Password=admission
     steps:
       - uses: actions/checkout@v4
 
