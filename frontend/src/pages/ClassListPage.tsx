@@ -1,11 +1,12 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import { HowItWorks } from '../components/HowItWorks'
 
 /** Parent home: what online admission is, then every class with its seats. */
 export function ClassListPage() {
   return (
     <Box>
-      <Box component="section" aria-labelledby="intro-title" sx={{ maxWidth: 720, mb: { xs: 4, md: 6 } }}>
+      <Box component="section" aria-labelledby="intro-title" sx={{ maxWidth: 720, mb: 3 }}>
         <Typography variant="overline" color="primary">
           Online admission
         </Typography>
@@ -17,6 +18,10 @@ export function ClassListPage() {
           student for a limited time. Pay the admission fee before the time runs out to confirm the
           admission, or the seat goes to the next applicant.
         </Typography>
+      </Box>
+
+      <Box sx={{ mb: { xs: 5, md: 7 } }}>
+        <HowItWorks />
       </Box>
 
       <Box component="section" aria-labelledby="classes-title">
