@@ -91,14 +91,15 @@ export function StudentIdPrompt() {
           spacing={{ xs: 1.5, md: 4 }}
           sx={{ alignItems: { md: 'center' } }}
         >
-          <Box sx={{ flex: '0 1 380px' }}>
+          {/* Fixed widths only side by side; stacked on phones they would turn into heights. */}
+          <Box sx={{ flex: { md: '0 1 380px' } }}>
             <Typography sx={{ fontWeight: 600 }}>Who is applying?</Typography>
             <Typography variant="body2" color="text.secondary">
               Enter the student's 17-digit birth registration number. It identifies the student; no
               account or password is needed.
             </Typography>
           </Box>
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: { md: 1 } }}>
             <StudentIdForm />
           </Box>
         </Stack>
