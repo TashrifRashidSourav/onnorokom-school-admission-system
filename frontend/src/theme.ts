@@ -1,7 +1,7 @@
 import { alpha, createTheme } from '@mui/material/styles'
 
 // One custom MUI theme for the whole app: calm and professional rather than
-// default Material. Light and dark follow the operating system setting.
+// default Material. Light only: the same look on every device.
 
 const fontFamily = [
   '"Inter Variable"',
@@ -16,32 +16,18 @@ const fontFamily = [
 export const monoFontFamily = 'ui-monospace, "Cascadia Code", Consolas, monospace'
 
 export const theme = createTheme({
-  cssVariables: { colorSchemeSelector: 'media' },
-  colorSchemes: {
-    light: {
-      palette: {
-        primary: { main: '#1D4ED8', dark: '#1E40AF', light: '#3B82F6', contrastText: '#FFFFFF' },
-        success: { main: '#15803D' },
-        warning: { main: '#B45309' },
-        error: { main: '#B91C1C' },
-        info: { main: '#0369A1' },
-        background: { default: '#F7F8FA', paper: '#FFFFFF' },
-        text: { primary: '#111827', secondary: '#4B5563' },
-        divider: '#E5E7EB',
-      },
-    },
-    dark: {
-      palette: {
-        primary: { main: '#60A5FA', dark: '#3B82F6', light: '#93C5FD', contrastText: '#0B1220' },
-        success: { main: '#4ADE80' },
-        warning: { main: '#FBBF24' },
-        error: { main: '#F87171' },
-        info: { main: '#38BDF8' },
-        background: { default: '#0B1018', paper: '#121925' },
-        text: { primary: '#E5E7EB', secondary: '#9CA3AF' },
-        divider: '#1F2937',
-      },
-    },
+  // CSS variables let the few hand-written styles use the same palette.
+  cssVariables: true,
+  palette: {
+    mode: 'light',
+    primary: { main: '#1D4ED8', dark: '#1E40AF', light: '#3B82F6', contrastText: '#FFFFFF' },
+    success: { main: '#15803D' },
+    warning: { main: '#B45309' },
+    error: { main: '#B91C1C' },
+    info: { main: '#0369A1' },
+    background: { default: '#F7F8FA', paper: '#FFFFFF' },
+    text: { primary: '#111827', secondary: '#4B5563' },
+    divider: '#E5E7EB',
   },
   shape: { borderRadius: 8 },
   typography: {
@@ -71,11 +57,10 @@ export const theme = createTheme({
     },
     MuiCard: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: {
           borderRadius: 12,
           boxShadow: `0 1px 2px ${alpha('#101828', 0.04)}, 0 1px 3px ${alpha('#101828', 0.06)}`,
-          ...theme.applyStyles('dark', { boxShadow: 'none' }),
-        }),
+        },
       },
     },
     MuiAppBar: {

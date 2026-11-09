@@ -1,7 +1,7 @@
 /*
- * Page basics (font, background, box-sizing, light/dark) come from the MUI theme
- * and CssBaseline. These aliases point the remaining hand-written styles at the
- * theme's CSS variables, so they follow the same palette in light and dark mode.
+ * Page basics (font, background, box-sizing) come from the MUI theme and
+ * CssBaseline. These aliases point the remaining hand-written styles at the
+ * theme's CSS variables, so everything shares one palette.
  */
 :root {
   --bg: var(--mui-palette-background-default);
