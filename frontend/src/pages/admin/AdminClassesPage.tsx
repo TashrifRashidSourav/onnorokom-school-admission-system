@@ -5,6 +5,7 @@ import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Paper from '@mui/material/Paper'
+import Snackbar from '@mui/material/Snackbar'
 import Stack from '@mui/material/Stack'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -52,13 +53,6 @@ export function AdminClassesPage() {
         </Button>
       </Stack>
 
-      {lastCreated !== null && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setLastCreated(null)}>
-          <strong>{lastCreated.name}</strong> was created with{' '}
-          {lastCreated.totalSeats.toLocaleString('en-US')} seats.
-        </Alert>
-      )}
-
       <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
         <Table aria-label="Classes and seats">
           <TableHead>
@@ -91,6 +85,28 @@ export function AdminClassesPage() {
       </TableContainer>
 
       <NewClassDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onCreated={setLastCreated} />
+
+      {/* Confirmation that does not push the table down; closes by itself. */}
+      <Snackbar
+        open={lastCreated !== null}
+        autoHideDuration={6000}
+        onClose={(_, reason) => reason !== 'clickaway' && setLastCreated(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setLastCreated(null)}
+          sx={{ width: '100%', alignItems: 'center' }}
+        >
+          {lastCreated !== null && (
+            <>
+              <strong>{lastCreated.name}</strong> created with{' '}
+              {lastCreated.totalSeats.toLocaleString('en-US')} seats.
+            </>
+          )}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
