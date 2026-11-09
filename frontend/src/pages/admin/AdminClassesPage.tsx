@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
 import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined'
+import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Paper from '@mui/material/Paper'
@@ -11,7 +13,8 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
-import { Link as RouterLink } from 'react-router'
+import { NewClassDialog } from '../../admin/NewClassDialog'
+import type { CreatedClass } from '../../api/types'
 
 const columns = ['Class', 'Total', 'Confirmed', 'Held', 'Available']
 
@@ -20,6 +23,10 @@ const columns = ['Class', 'Total', 'Confirmed', 'Held', 'Available']
  * The rows are filled from the class list API once it exists (PLAN step 13).
  */
 export function AdminClassesPage() {
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [lastCreated, setLastCreated] = useState<CreatedClass | null>(null)
+  const openDialog = () => setDialogOpen(true)
+
   return (
     <Box component="section">
       <Stack
@@ -36,15 +43,21 @@ export function AdminClassesPage() {
           </Typography>
         </Box>
         <Button
-          component={RouterLink}
-          to="/admin/classes/new"
           variant="contained"
           startIcon={<AddRoundedIcon />}
+          onClick={openDialog}
           sx={{ alignSelf: { xs: 'flex-start', sm: 'auto' } }}
         >
           New class
         </Button>
       </Stack>
+
+      {lastCreated !== null && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setLastCreated(null)}>
+          <strong>{lastCreated.name}</strong> was created with{' '}
+          {lastCreated.totalSeats.toLocaleString('en-US')} seats.
+        </Alert>
+      )}
 
       <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
         <Table aria-label="Classes and seats">
@@ -67,7 +80,7 @@ export function AdminClassesPage() {
                     Create a class for each shift, for example "Class 6 - Morning Shift", to open it for
                     applications.
                   </Typography>
-                  <Button component={RouterLink} to="/admin/classes/new" startIcon={<AddRoundedIcon />}>
+                  <Button startIcon={<AddRoundedIcon />} onClick={openDialog}>
                     Create the first class
                   </Button>
                 </Stack>
@@ -76,6 +89,8 @@ export function AdminClassesPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <NewClassDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onCreated={setLastCreated} />
     </Box>
   )
 }
