@@ -5,8 +5,8 @@ import Container from '@mui/material/Container'
 import Stack from '@mui/material/Stack'
 import Toolbar from '@mui/material/Toolbar'
 import { NavLink, Outlet } from 'react-router'
-import { config } from '../config'
 import { BrandLogo } from '../components/BrandLogo'
+import { SiteFooter } from '../components/SiteFooter'
 import { StudentIdHeaderButton, StudentIdPrompt } from '../student/StudentIdBar'
 
 /** Pages for parents applying on behalf of a student. No admin actions here. */
@@ -52,9 +52,7 @@ export function ParentLayout() {
         <Outlet />
       </Container>
 
-      <footer className="app-footer">
-        API: <code>{config.apiUrl}</code>
-      </footer>
+      <SiteFooter />
     </Box>
   )
 }

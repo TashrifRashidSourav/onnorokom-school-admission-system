@@ -1,21 +1,8 @@
 /*
  * Page basics (font, background, box-sizing) come from the MUI theme and
- * CssBaseline. These aliases point the remaining hand-written styles at the
- * theme's CSS variables, so everything shares one palette.
+ * CssBaseline; layout and components use MUI. Only a few plain-HTML basics
+ * remain here, using the theme's CSS variables.
  */
-:root {
-  --bg: var(--mui-palette-background-default);
-  --surface: var(--mui-palette-background-paper);
-  --text: var(--mui-palette-text-primary);
-  --muted: var(--mui-palette-text-secondary);
-  --border: var(--mui-palette-divider);
-  --primary: var(--mui-palette-primary-main);
-  --primary-contrast: var(--mui-palette-primary-contrastText);
-  --danger: var(--mui-palette-error-main);
-  --danger-bg: rgba(var(--mui-palette-error-mainChannel) / 0.08);
-  --success: var(--mui-palette-success-main);
-  --success-bg: rgba(var(--mui-palette-success-mainChannel) / 0.08);
-}
 
 body {
   min-height: 100vh;
@@ -29,7 +16,7 @@ h1 {
 }
 
 a {
-  color: var(--primary);
+  color: var(--mui-palette-primary-main);
 }
 
 code {
@@ -38,71 +25,5 @@ code {
 }
 
 .muted {
-  color: var(--muted);
-}
-
-.app-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-}
-
-.app-header__inner,
-.app-main {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 16px;
-}
-
-.app-header__inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 24px;
-  min-height: 56px;
-}
-
-.app-brand {
-  font-weight: 700;
-}
-
-.app-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.app-nav a {
-  padding: 6px 10px;
-  border-radius: 6px;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.app-nav a:hover {
-  background: var(--bg);
-}
-
-.app-nav a.active {
-  background: var(--primary);
-  color: var(--primary-contrast);
-}
-
-.app-main {
-  padding-top: 24px;
-  padding-bottom: 48px;
-}
-
-.app-header__student {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 16px 12px;
-}
-
-.app-footer {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 16px;
-  border-top: 1px solid var(--border);
-  font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--mui-palette-text-secondary);
 }
