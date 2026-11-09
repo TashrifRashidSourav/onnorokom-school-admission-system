@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router'
 import { AdminLayout } from './layouts/AdminLayout'
 import { ParentLayout } from './layouts/ParentLayout'
+import { AdminClassesPage } from './pages/admin/AdminClassesPage'
 import { ApplicationPage } from './pages/ApplicationPage'
 import { ClassListPage } from './pages/ClassListPage'
 import { CreateClassPage } from './pages/CreateClassPage'
@@ -20,6 +21,7 @@ export default function App() {
 
       {/* School admin console: its own layout, no student ID. */}
       <Route path="admin" element={<AdminLayout />}>
+        <Route index element={<AdminClassesPage />} />
         <Route path="classes/new" element={<CreateClassPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
