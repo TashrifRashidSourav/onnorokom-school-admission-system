@@ -1,4 +1,10 @@
 import { useId, useState, type FormEvent } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router'
+import { ApiError } from '../api/client'
+import { createClass } from '../api/endpoints'
+import { queryKeys } from '../api/queryClient'
+import type { CreatedClass } from '../api/types'
 import {
   hasErrors,
   MAX_SEATS,
@@ -18,14 +24,33 @@ export function CreateClassPage() {
   const seatsId = useId()
   const nameErrorId = useId()
   const seatsErrorId = useId()
+  const queryClient = useQueryClient()
+  const [created, setCreated] = useState<CreatedClass | null>(null)
+
+  const mutation = useMutation({
+    mutationFn: createClass,
+    onSuccess: (createdClass) => {
+      setCreated(createdClass)
+      setName('')
+      setSeats('')
+      setErrors({})
+      // The class list must show the new class right away.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes })
+    },
+  })
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (mutation.isPending) {
+      return
+    }
+    setCreated(null)
     const found = validateCreateClass(name, seats)
     setErrors(found)
     if (hasErrors(found)) {
       return
     }
+    mutation.mutate({ name: name.trim(), totalSeats: Number(seats.trim()) })
   }
 
   return (
@@ -35,6 +60,20 @@ export function CreateClassPage() {
         School admin: add a class for one shift. Each shift is its own class with its own seats,
         for example "Class 6 - Morning Shift" and "Class 6 - Day Shift".
       </p>
+
+      {created !== null && (
+        <div className="alert alert--success" role="status">
+          <strong>{created.name}</strong> was created with{' '}
+          {created.totalSeats.toLocaleString('en-US')} seats. <Link to="/">See all classes</Link>{' '}
+          or add another one below.
+        </div>
+      )}
+
+      {mutation.isError && (
+        <div className="alert alert--error" role="alert">
+          {errorMessage(mutation.error)}
+        </div>
+      )}
 
       <form className="card form" onSubmit={handleSubmit} noValidate>
         <div className="form__field">
@@ -94,11 +133,18 @@ export function CreateClassPage() {
         </div>
 
         <div className="form__actions">
-          <button type="submit" className="button">
-            Create class
+          <button type="submit" className="button" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Creating…' : 'Create class'}
           </button>
         </div>
       </form>
     </section>
   )
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    return `Could not create the class. ${error.message}`
+  }
+  return 'Could not create the class. Please try again.'
 }
