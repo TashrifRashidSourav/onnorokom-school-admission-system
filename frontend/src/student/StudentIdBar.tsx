@@ -1,4 +1,10 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Stack from '@mui/material/Stack'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
+import { monoFontFamily } from '../theme'
 import { useStudentId } from './StudentIdContext'
 import { isValidStudentId, STUDENT_ID_LENGTH } from './studentId'
 
@@ -11,18 +17,23 @@ export function StudentIdBar() {
   const [editing, setEditing] = useState(studentId === null)
   const [draft, setDraft] = useState(studentId ?? '')
   const [error, setError] = useState<string | null>(null)
-  const inputId = useId()
-  const errorId = useId()
 
   if (studentId !== null && !editing) {
     return (
-      <div className="student-bar student-bar--set">
-        <span>
-          Student ID: <strong className="mono">{studentId}</strong>
-        </span>
-        <button
-          type="button"
-          className="button button--secondary"
+      <Stack direction="row" spacing={1.5} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+        <Typography variant="body2" color="text.secondary">
+          Student ID
+        </Typography>
+        <Typography
+          component="strong"
+          data-testid="current-student-id"
+          sx={{ fontFamily: monoFontFamily, fontWeight: 600 }}
+        >
+          {studentId}
+        </Typography>
+        <Button
+          size="small"
+          variant="outlined"
           onClick={() => {
             setDraft(studentId)
             setError(null)
@@ -30,8 +41,8 @@ export function StudentIdBar() {
           }}
         >
           Change
-        </button>
-      </div>
+        </Button>
+      </Stack>
     )
   }
 
@@ -52,60 +63,51 @@ export function StudentIdBar() {
   }
 
   return (
-    <form className="student-bar" onSubmit={handleSubmit} noValidate>
-      <label htmlFor={inputId}>Student birth registration number</label>
-      <div className="student-bar__row">
-        <input
-          id={inputId}
-          className="mono"
-          inputMode="numeric"
-          autoComplete="off"
+    <Box component="form" onSubmit={handleSubmit} noValidate>
+      <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <TextField
+          size="small"
+          label="Student birth registration number"
           placeholder="17 digits, e.g. 20152691234567890"
-          maxLength={STUDENT_ID_LENGTH + 4}
           value={draft}
           onChange={(event) => {
             setDraft(event.target.value)
             setError(null)
           }}
-          aria-invalid={error !== null}
-          aria-describedby={error !== null ? errorId : undefined}
+          error={error !== null}
+          helperText={error ?? `${entered.length}/${STUDENT_ID_LENGTH} digits`}
+          autoComplete="off"
+          slotProps={{
+            htmlInput: { inputMode: 'numeric', maxLength: STUDENT_ID_LENGTH + 4, style: { fontFamily: monoFontFamily } },
+            formHelperText: { role: error !== null ? 'alert' : undefined },
+          }}
+          sx={{ flex: '1 1 260px', maxWidth: 340 }}
         />
-        <span className="student-bar__count" aria-live="polite">
-          {entered.length}/{STUDENT_ID_LENGTH}
-        </span>
-        <button type="submit" className="button">
+        <Button type="submit" variant="contained">
           Use this ID
-        </button>
+        </Button>
         {studentId !== null && (
-          <button
-            type="button"
-            className="button button--secondary"
+          <Button
             onClick={() => {
               setEditing(false)
               setError(null)
             }}
           >
             Cancel
-          </button>
+          </Button>
         )}
         {studentId !== null && (
-          <button
-            type="button"
-            className="button button--link"
+          <Button
+            color="inherit"
             onClick={() => {
               clearStudentId()
               setDraft('')
             }}
           >
             Forget ID
-          </button>
+          </Button>
         )}
-      </div>
-      {error !== null && (
-        <p id={errorId} className="field-error" role="alert">
-          {error}
-        </p>
-      )}
-    </form>
+      </Stack>
+    </Box>
   )
 }

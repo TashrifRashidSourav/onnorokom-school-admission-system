@@ -1,6 +1,14 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router'
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Link from '@mui/material/Link'
+import Paper from '@mui/material/Paper'
+import Stack from '@mui/material/Stack'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
+import { Link as RouterLink } from 'react-router'
 import { ApiError } from '../api/client'
 import { createClass } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
@@ -20,10 +28,6 @@ export function CreateClassPage() {
   const [name, setName] = useState('')
   const [seats, setSeats] = useState('')
   const [errors, setErrors] = useState<CreateClassErrors>({})
-  const nameId = useId()
-  const seatsId = useId()
-  const nameErrorId = useId()
-  const seatsErrorId = useId()
   const queryClient = useQueryClient()
   const [created, setCreated] = useState<CreatedClass | null>(null)
 
@@ -54,91 +58,73 @@ export function CreateClassPage() {
   }
 
   return (
-    <section>
-      <h1>Create class</h1>
-      <p className="muted">
+    <Box component="section">
+      <Typography variant="h1" gutterBottom>
+        Create class
+      </Typography>
+      <Typography color="text.secondary" sx={{ maxWidth: 640 }}>
         School admin: add a class for one shift. Each shift is its own class with its own seats,
         for example "Class 6 - Morning Shift" and "Class 6 - Day Shift".
-      </p>
+      </Typography>
 
-      {created !== null && (
-        <div className="alert alert--success" role="status">
-          <strong>{created.name}</strong> was created with{' '}
-          {created.totalSeats.toLocaleString('en-US')} seats. <Link to="/">See all classes</Link>{' '}
-          or add another one below.
-        </div>
-      )}
+      <Stack spacing={2} sx={{ mt: 3, maxWidth: 520 }}>
+        {created !== null && (
+          <Alert severity="success" role="status">
+            <strong>{created.name}</strong> was created with{' '}
+            {created.totalSeats.toLocaleString('en-US')} seats.{' '}
+            <Link component={RouterLink} to="/">
+              See all classes
+            </Link>{' '}
+            or add another one below.
+          </Alert>
+        )}
 
-      {mutation.isError && (
-        <div className="alert alert--error" role="alert">
-          {errorMessage(mutation.error)}
-        </div>
-      )}
+        {mutation.isError && <Alert severity="error">{errorMessage(mutation.error)}</Alert>}
 
-      <form className="card form" onSubmit={handleSubmit} noValidate>
-        <div className="form__field">
-          <label htmlFor={nameId}>Class name</label>
-          <input
-            id={nameId}
-            value={name}
-            onChange={(event) => {
-              setName(event.target.value)
-              setErrors((current) => ({ ...current, name: undefined }))
-            }}
-            onBlur={() =>
-              name !== '' && setErrors((current) => ({ ...current, name: validateClassName(name) }))
-            }
-            placeholder="Class 6 - Morning Shift"
-            autoComplete="off"
-            aria-invalid={errors.name !== undefined}
-            aria-describedby={errors.name !== undefined ? nameErrorId : undefined}
-          />
-          {errors.name !== undefined && (
-            <p id={nameErrorId} className="field-error">
-              {errors.name}
-            </p>
-          )}
-        </div>
+        <Paper component="form" onSubmit={handleSubmit} noValidate sx={{ p: 3, borderRadius: 3 }}>
+          <Stack spacing={2.5}>
+            <TextField
+              label="Class name"
+              placeholder="Class 6 - Morning Shift"
+              autoComplete="off"
+              value={name}
+              onChange={(event) => {
+                setName(event.target.value)
+                setErrors((current) => ({ ...current, name: undefined }))
+              }}
+              onBlur={() =>
+                name !== '' && setErrors((current) => ({ ...current, name: validateClassName(name) }))
+              }
+              error={errors.name !== undefined}
+              helperText={errors.name}
+            />
 
-        <div className="form__field">
-          <label htmlFor={seatsId}>Number of seats</label>
-          <input
-            id={seatsId}
-            type="number"
-            inputMode="numeric"
-            min={MIN_SEATS}
-            max={MAX_SEATS}
-            step={1}
-            value={seats}
-            onChange={(event) => {
-              setSeats(event.target.value)
-              setErrors((current) => ({ ...current, seats: undefined }))
-            }}
-            onBlur={() =>
-              seats !== '' && setErrors((current) => ({ ...current, seats: validateSeats(seats) }))
-            }
-            placeholder="120"
-            aria-invalid={errors.seats !== undefined}
-            aria-describedby={errors.seats !== undefined ? seatsErrorId : undefined}
-          />
-          {errors.seats !== undefined ? (
-            <p id={seatsErrorId} className="field-error">
-              {errors.seats}
-            </p>
-          ) : (
-            <p className="form__hint">
-              Between {MIN_SEATS} and {MAX_SEATS.toLocaleString('en-US')}.
-            </p>
-          )}
-        </div>
+            <TextField
+              label="Number of seats"
+              placeholder="120"
+              type="number"
+              value={seats}
+              onChange={(event) => {
+                setSeats(event.target.value)
+                setErrors((current) => ({ ...current, seats: undefined }))
+              }}
+              onBlur={() =>
+                seats !== '' && setErrors((current) => ({ ...current, seats: validateSeats(seats) }))
+              }
+              error={errors.seats !== undefined}
+              helperText={errors.seats ?? `Between ${MIN_SEATS} and ${MAX_SEATS.toLocaleString('en-US')}.`}
+              slotProps={{ htmlInput: { inputMode: 'numeric', min: MIN_SEATS, max: MAX_SEATS, step: 1 } }}
+            />
 
-        <div className="form__actions">
-          <button type="submit" className="button" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creating…' : 'Create class'}
-          </button>
-        </div>
-      </form>
-    </section>
+            <Box>
+              <Button type="submit" variant="contained" size="large" disabled={mutation.isPending}>
+                {mutation.isPending ? 'Creating…' : 'Create class'}
+              </Button>
+            </Box>
+          </Stack>
+        </Paper>
+      </Stack>
+    </Box>
   )
 }
 
