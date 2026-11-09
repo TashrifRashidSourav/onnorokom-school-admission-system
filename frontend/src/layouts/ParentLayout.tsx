@@ -7,7 +7,7 @@ import Toolbar from '@mui/material/Toolbar'
 import { NavLink, Outlet } from 'react-router'
 import { config } from '../config'
 import { BrandLogo } from '../components/BrandLogo'
-import { StudentIdBar } from '../student/StudentIdBar'
+import { StudentIdHeaderButton, StudentIdPrompt } from '../student/StudentIdBar'
 
 /** Pages for parents applying on behalf of a student. No admin actions here. */
 const parentNavItems = [
@@ -40,15 +40,13 @@ export function ParentLayout() {
                 </Button>
               ))}
             </Stack>
+            <Box sx={{ flex: 1 }} />
+            <StudentIdHeaderButton />
           </Toolbar>
         </Container>
       </AppBar>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-        <Container maxWidth="lg" sx={{ py: 1.5 }}>
-          <StudentIdBar />
-        </Container>
-      </Box>
+      <StudentIdPrompt />
 
       <Container component="main" maxWidth="lg" sx={{ flex: 1, py: { xs: 3, md: 5 } }}>
         <Outlet />
