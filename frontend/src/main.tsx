@@ -5,13 +5,16 @@ import { BrowserRouter } from 'react-router'
 import './index.css'
 import App from './App.tsx'
 import { queryClient } from './api/queryClient'
+import { StudentIdProvider } from './student/StudentIdProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <StudentIdProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </StudentIdProvider>
     </QueryClientProvider>
   </StrictMode>,
 )
