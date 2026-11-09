@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router'
+import { config } from '../config'
 
 const navItems = [
   { to: '/', label: 'Classes', end: true },
@@ -25,6 +26,10 @@ export function Layout() {
       <main className="app-main">
         <Outlet />
       </main>
+
+      <footer className="app-footer">
+        API: <code>{config.apiUrl}</code>
+      </footer>
     </div>
   )
 }

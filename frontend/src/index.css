@@ -104,3 +104,12 @@ code {
   padding-top: 24px;
   padding-bottom: 48px;
 }
+
+.app-footer {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
