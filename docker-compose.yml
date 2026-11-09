@@ -31,5 +31,16 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  frontend:
+    build: ./frontend
+    environment:
+      # URL the *browser* uses to reach the backend, written into config.js at start.
+      API_URL: http://localhost:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
 volumes:
   pgdata:
