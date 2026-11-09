@@ -1,5 +1,6 @@
 using Admission.Api.Data;
 using Admission.Api.Errors;
+using Admission.Api.Students;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,15 @@ builder.Services.AddProblemDetails();
 // Throwing instead routes it through ApiExceptionHandler, which adds the JSON error body.
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 
+// The frontend (http://localhost:3000) is a different origin from the API (:8080),
+// so the browser needs CORS. Origins come from Cors:AllowedOrigins (comma-separated).
+var allowedOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? "")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+    .WithOrigins(allowedOrigins)
+    .WithMethods("GET", "POST", "DELETE")
+    .WithHeaders("Content-Type", StudentId.HeaderName)));
+
 var app = builder.Build();
 
 // Creates or updates the schema on startup. Tests that run without a database
@@ -29,6 +39,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
 
 app.UseExceptionHandler();
 app.UseJsonStatusCodeBodies();
+app.UseCors();
 
 // Liveness probe used by Docker and by the smoke test.
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
