@@ -47,5 +47,38 @@ services:
       - backend
     restart: unless-stopped
 
+  # ---- test profile: docker compose --profile test run --rm backend-tests ----
+  # Not started by a plain `docker compose up`.
+
+  db-test:
+    profiles: [test]
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: admission_test
+      POSTGRES_USER: admission
+      POSTGRES_PASSWORD: admission
+    ports:
+      # Published so `dotnet test` on the host can use it too.
+      - "${TEST_DB_PORT:-5433}:5432"
+    # Throwaway data in memory: fast, and nothing left behind.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admission -d admission_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  backend-tests:
+    profiles: [test]
+    build:
+      context: ./backend
+      target: test
+    environment:
+      TEST_DB_CONNECTION: Host=db-test;Port=5432;Database=admission_test;Username=admission;Password=admission
+    depends_on:
+      db-test:
+        condition: service_healthy
+
 volumes:
   pgdata:

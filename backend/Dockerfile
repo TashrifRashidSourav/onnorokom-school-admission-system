@@ -13,6 +13,11 @@ RUN dotnet restore
 COPY . .
 RUN dotnet publish src/Admission.Api/Admission.Api.csproj -c Release -o /app --no-restore
 
+# ---- test (only built when targeted: docker compose --profile test) ----
+FROM build AS test
+RUN dotnet build tests/Admission.Tests/Admission.Tests.csproj -c Release --no-restore
+ENTRYPOINT ["dotnet", "test", "tests/Admission.Tests/Admission.Tests.csproj", "-c", "Release", "--no-build", "--logger", "console;verbosity=normal"]
+
 # ---- runtime ----
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
