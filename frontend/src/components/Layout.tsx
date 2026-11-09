@@ -1,0 +1,30 @@
+import { NavLink, Outlet } from 'react-router'
+
+const navItems = [
+  { to: '/', label: 'Classes', end: true },
+  { to: '/my-applications', label: 'My applications', end: false },
+  { to: '/admin/classes/new', label: 'Create class (admin)', end: false },
+]
+
+export function Layout() {
+  return (
+    <div className="app">
+      <header className="app-header">
+        <div className="app-header__inner">
+          <span className="app-brand">School Admission</span>
+          <nav className="app-nav" aria-label="Main">
+            {navItems.map((item) => (
+              <NavLink key={item.to} to={item.to} end={item.end}>
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      <main className="app-main">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
