@@ -1,5 +1,6 @@
 using Admission.Api.Data;
 using Admission.Api.Errors;
+using Admission.Api.Features.Classes;
 using Admission.Api.Students;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,6 +44,8 @@ app.UseCors();
 
 // Liveness probe used by Docker and by the smoke test.
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
+app.MapClassEndpoints();
 
 app.Run();
 
