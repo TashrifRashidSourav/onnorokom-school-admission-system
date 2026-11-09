@@ -1,4 +1,6 @@
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined'
 import Box from '@mui/material/Box'
+import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
 import { HowItWorks } from '../components/HowItWorks'
 
@@ -31,6 +33,25 @@ export function ClassListPage() {
         <Typography color="text.secondary">
           Every class and shift with its total, held, confirmed and available seats.
         </Typography>
+
+        {/* Shown until classes exist; the class cards replace it once the list is loaded. */}
+        <Paper
+          sx={{
+            mt: 3,
+            py: { xs: 5, md: 7 },
+            px: 3,
+            borderRadius: 3,
+            borderStyle: 'dashed',
+            textAlign: 'center',
+          }}
+        >
+          <SchoolOutlinedIcon color="disabled" sx={{ fontSize: 44, mb: 1 }} />
+          <Typography sx={{ fontWeight: 600 }}>No classes are open yet</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 420, mx: 'auto', mt: 0.5 }}>
+            Classes appear here as soon as the school opens them for admission. Please check back
+            later.
+          </Typography>
+        </Paper>
       </Box>
     </Box>
   )
