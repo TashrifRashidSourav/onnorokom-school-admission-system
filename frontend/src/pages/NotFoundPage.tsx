@@ -1,12 +1,27 @@
-import { Link } from 'react-router'
+import Box from '@mui/material/Box'
+import Link from '@mui/material/Link'
+import Typography from '@mui/material/Typography'
+import { Link as RouterLink } from 'react-router'
 
-export function NotFoundPage() {
+interface NotFoundPageProps {
+  /** Where "go back" leads: the home of the area (parent portal or admin console). */
+  homePath?: string
+  homeLabel?: string
+}
+
+export function NotFoundPage({ homePath = '/', homeLabel = 'Go to the class list' }: NotFoundPageProps) {
   return (
-    <section>
-      <h1>Page not found</h1>
-      <p className="muted">
-        This page does not exist. <Link to="/">Go to the class list</Link>.
-      </p>
-    </section>
+    <Box component="section">
+      <Typography variant="h1" gutterBottom>
+        Page not found
+      </Typography>
+      <Typography color="text.secondary">
+        This page does not exist.{' '}
+        <Link component={RouterLink} to={homePath}>
+          {homeLabel}
+        </Link>
+        .
+      </Typography>
+    </Box>
   )
 }

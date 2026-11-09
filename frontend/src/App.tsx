@@ -23,7 +23,7 @@ export default function App() {
       <Route path="admin" element={<AdminLayout />}>
         <Route index element={<AdminClassesPage />} />
         <Route path="classes/new" element={<CreateClassPage />} />
-        <Route path="*" element={<NotFoundPage />} />
+        <Route path="*" element={<NotFoundPage homePath="/admin" homeLabel="Go to the admin console" />} />
       </Route>
     </Routes>
   )

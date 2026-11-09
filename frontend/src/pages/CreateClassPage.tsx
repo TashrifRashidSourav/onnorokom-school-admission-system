@@ -63,8 +63,8 @@ export function CreateClassPage() {
         Create class
       </Typography>
       <Typography color="text.secondary" sx={{ maxWidth: 640 }}>
-        School admin: add a class for one shift. Each shift is its own class with its own seats,
-        for example "Class 6 - Morning Shift" and "Class 6 - Day Shift".
+        Add a class for one shift. Each shift is its own class with its own seats, for example
+        "Class 6 - Morning Shift" and "Class 6 - Day Shift".
       </Typography>
 
       <Stack spacing={2} sx={{ mt: 3, maxWidth: 520 }}>
@@ -72,7 +72,7 @@ export function CreateClassPage() {
           <Alert severity="success" role="status">
             <strong>{created.name}</strong> was created with{' '}
             {created.totalSeats.toLocaleString('en-US')} seats.{' '}
-            <Link component={RouterLink} to="/">
+            <Link component={RouterLink} to="/admin">
               See all classes
             </Link>{' '}
             or add another one below.

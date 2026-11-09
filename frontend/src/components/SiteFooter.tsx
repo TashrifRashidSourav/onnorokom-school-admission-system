@@ -20,7 +20,7 @@ export function SiteFooter() {
           </Typography>
           <Typography variant="body2" color="text.secondary">
             School staff?{' '}
-            <Link component={RouterLink} to="/admin/classes/new" underline="hover" sx={{ fontWeight: 600 }}>
+            <Link component={RouterLink} to="/admin" underline="hover" sx={{ fontWeight: 600 }}>
               Open the admin console
             </Link>
           </Typography>
