@@ -1,0 +1,49 @@
+name: school-admission
+
+# Every setting has a default, so `docker compose up` works without a .env file.
+# Override any of them in .env (see .env.example).
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-admission}
+      POSTGRES_USER: ${POSTGRES_USER:-admission}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admission}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      # Named volume: data survives `docker compose down` and `up`.
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB:-admission};Username=${POSTGRES_USER:-admission};Password=${POSTGRES_PASSWORD:-admission}
+      HOLD_DURATION_SECONDS: ${HOLD_DURATION_SECONDS:-600}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    environment:
+      # URL the *browser* uses to reach the backend, written into config.js at start.
+      API_URL: ${API_URL:-http://localhost:8080}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
