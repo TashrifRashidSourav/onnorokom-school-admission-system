@@ -167,6 +167,44 @@ input[aria-invalid='true'] {
   font-size: 0.9rem;
 }
 
+/* ---- cards and forms ---- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin-top: 16px;
+}
+
+.form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form__field label {
+  font-weight: 600;
+}
+
+.form__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.form__actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ---- student ID bar ---- */
 
 .app-header__student {
