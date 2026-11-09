@@ -5,6 +5,15 @@ on:
   push:
     branches: [main]
 
+# A newer push to the same branch or PR cancels the run still in progress.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+# The jobs only read the repository.
+permissions:
+  contents: read
+
 jobs:
   backend:
     name: backend
