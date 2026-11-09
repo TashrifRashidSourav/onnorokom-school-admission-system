@@ -1,5 +1,5 @@
 import { Route, Routes } from 'react-router'
-import { Layout } from './components/Layout'
+import { ParentLayout } from './layouts/ParentLayout'
 import { ApplicationPage } from './pages/ApplicationPage'
 import { ClassListPage } from './pages/ClassListPage'
 import { CreateClassPage } from './pages/CreateClassPage'
@@ -9,7 +9,7 @@ import { NotFoundPage } from './pages/NotFoundPage'
 export default function App() {
   return (
     <Routes>
-      <Route element={<Layout />}>
+      <Route element={<ParentLayout />}>
         <Route index element={<ClassListPage />} />
         <Route path="admin/classes/new" element={<CreateClassPage />} />
         <Route path="applications/:holdId" element={<ApplicationPage />} />
