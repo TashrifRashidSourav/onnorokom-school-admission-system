@@ -10,7 +10,10 @@ public class HealthEndpointTests(WebApplicationFactory<Program> factory)
     [Fact]
     public async Task Health_returns_ok()
     {
-        var client = factory.CreateClient();
+        // The health check needs no database, so skip migrations for this test.
+        var client = factory
+            .WithWebHostBuilder(b => b.UseSetting("Database:MigrateOnStartup", "false"))
+            .CreateClient();
 
         var response = await client.GetAsync("/health");
 

@@ -10,6 +10,13 @@ builder.Services.AddDbContext<AdmissionDbContext>(options =>
 
 var app = builder.Build();
 
+// Creates or updates the schema on startup. Tests that run without a database
+// switch it off with Database:MigrateOnStartup=false.
+if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
+{
+    await app.MigrateWithRetryAsync();
+}
+
 // Liveness probe used by Docker and by the smoke test.
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
