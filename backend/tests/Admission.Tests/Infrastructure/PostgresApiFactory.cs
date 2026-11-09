@@ -1,6 +1,7 @@
 using Admission.Api.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Admission.Tests.Infrastructure;
@@ -36,6 +37,10 @@ public class PostgresApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     }
 
     public new Task DisposeAsync() => base.DisposeAsync().AsTask();
+
+    /// <summary>Deletes all rows so the next test starts from empty tables.</summary>
+    public Task ResetDatabaseAsync() =>
+        WithDbAsync(db => db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE holds, classes CASCADE"));
 
     /// <summary>Runs <paramref name="action"/> with a fresh DbContext from the app's container.</summary>
     public async Task<T> WithDbAsync<T>(Func<AdmissionDbContext, Task<T>> action)
