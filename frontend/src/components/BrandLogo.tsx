@@ -27,7 +27,10 @@ export function BrandLogo({ to = '/', subtitle }: { to?: string; subtitle?: stri
         <SchoolRoundedIcon fontSize="small" />
       </Box>
       <Box sx={{ lineHeight: 1.15 }}>
-        <Typography component="span" sx={{ display: 'block', fontWeight: 700, fontSize: '1.05rem' }}>
+        <Typography
+          component="span"
+          sx={{ display: 'block', fontWeight: 700, fontSize: { xs: '0.95rem', sm: '1.05rem' }, whiteSpace: 'nowrap' }}
+        >
           School Admission
         </Typography>
         {subtitle !== undefined && (

@@ -135,9 +135,17 @@ export function StudentIdHeaderButton() {
         <Box
           component="strong"
           data-testid="current-student-id"
-          sx={{ fontFamily: monoFontFamily, fontWeight: 600 }}
+          sx={{ fontFamily: monoFontFamily, fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}
         >
           {studentId}
+        </Box>
+        {/* Phones: only the last digits fit next to the logo; the panel shows the full ID. */}
+        <Box
+          component="strong"
+          aria-hidden
+          sx={{ fontFamily: monoFontFamily, fontWeight: 600, display: { xs: 'inline', sm: 'none' } }}
+        >
+          …{studentId.slice(-4)}
         </Box>
       </Button>
 
