@@ -1,6 +1,10 @@
 # Assignment brief must never be published
 *.pdf
 
+# Personal working plans
+PLAN2.md
+PLAN3.md
+
 # Environment / secrets
 .env
 .env.*
