@@ -14,6 +14,10 @@ builder.Services.AddDbContext<AdmissionDbContext>(options =>
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+// Outside Development, minimal APIs answer a malformed body with an empty 400.
+// Throwing instead routes it through ApiExceptionHandler, which adds the JSON error body.
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
+
 var app = builder.Build();
 
 // Creates or updates the schema on startup. Tests that run without a database

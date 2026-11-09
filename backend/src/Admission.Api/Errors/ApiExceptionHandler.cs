@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 
 namespace Admission.Api.Errors;
@@ -32,6 +33,16 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
 
     internal static (int StatusCode, ApiError Error) Map(Exception exception) => exception switch
     {
+        // Body is not valid JSON, or a value has the wrong type (e.g. "totalSeats": "abc").
+        BadHttpRequestException { InnerException: JsonException } =>
+            (StatusCodes.Status400BadRequest,
+             new ApiError(ErrorCodes.InvalidJson,
+                 "The request body is not valid JSON or a field has the wrong type.")),
+
+        // Other request-binding failures: missing body, wrong content type, too large, ...
+        BadHttpRequestException bad =>
+            (bad.StatusCode, StatusCodeErrorBodies.ForStatus(bad.StatusCode)),
+
         _ => (StatusCodes.Status500InternalServerError,
               new ApiError(ErrorCodes.InternalError, "Something went wrong on the server. Please try again.")),
     };

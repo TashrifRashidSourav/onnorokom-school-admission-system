@@ -11,6 +11,7 @@ public sealed record ApiError(string Error, string Message);
 public static class ErrorCodes
 {
     public const string BadRequest = "bad_request";
+    public const string InvalidJson = "invalid_json";
     public const string NotFound = "not_found";
     public const string MethodNotAllowed = "method_not_allowed";
     public const string UnsupportedMediaType = "unsupported_media_type";
