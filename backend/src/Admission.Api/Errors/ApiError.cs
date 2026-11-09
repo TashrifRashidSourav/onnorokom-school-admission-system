@@ -12,6 +12,8 @@ public static class ErrorCodes
 {
     public const string BadRequest = "bad_request";
     public const string InvalidJson = "invalid_json";
+    public const string StudentIdRequired = "student_id_required";
+    public const string InvalidStudentId = "invalid_student_id";
     public const string NotFound = "not_found";
     public const string MethodNotAllowed = "method_not_allowed";
     public const string UnsupportedMediaType = "unsupported_media_type";
