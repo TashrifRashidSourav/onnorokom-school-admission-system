@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router'
 import { config } from '../config'
+import { StudentIdBar } from '../student/StudentIdBar'
 
 const navItems = [
   { to: '/', label: 'Classes', end: true },
@@ -20,6 +21,9 @@ export function Layout() {
               </NavLink>
             ))}
           </nav>
+        </div>
+        <div className="app-header__student">
+          <StudentIdBar />
         </div>
       </header>
 
