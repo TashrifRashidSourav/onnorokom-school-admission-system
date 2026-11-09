@@ -25,6 +25,19 @@ export class ApiError extends Error {
   }
 }
 
+/** Header carrying the student's identity (17-digit birth registration number). */
+export const STUDENT_ID_HEADER = 'X-Student-Id'
+
+let currentStudentId: string | null = null
+
+/**
+ * Sets the student ID sent with every request. Called by StudentIdProvider whenever
+ * the ID changes, so API functions never need to pass it around.
+ */
+export function setRequestStudentId(studentId: string | null): void {
+  currentStudentId = studentId
+}
+
 type Method = 'GET' | 'POST' | 'DELETE'
 
 interface RequestOptions {
@@ -41,6 +54,9 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const headers: Record<string, string> = { Accept: 'application/json', ...options.headers }
   if (options.body !== undefined) {
     headers['Content-Type'] = 'application/json'
+  }
+  if (currentStudentId !== null) {
+    headers[STUDENT_ID_HEADER] = currentStudentId
   }
 
   let response: Response
