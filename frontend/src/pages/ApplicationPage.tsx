@@ -33,6 +33,13 @@ const explanations: Record<HoldStatus, (expiresAt: string) => string> = {
   CANCELLED: () => 'This application was cancelled and its seat was released.',
 }
 
+const detailLabel: Record<HoldStatus, string> = {
+  HELD: 'Pay before',
+  CONFIRMED: 'Payment deadline',
+  EXPIRED: 'Hold ended at',
+  CANCELLED: 'Hold would have ended at',
+}
+
 function BackToClasses() {
   return (
     <Button component={RouterLink} to="/" startIcon={<ArrowBackRoundedIcon />} color="inherit" sx={{ mb: 2, color: 'text.secondary' }}>
@@ -111,7 +118,7 @@ function ApplicationCard({ hold: loaded }: { hold: HoldDetails }) {
         <Divider />
 
         <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-          <Detail label={hold.status === 'HELD' ? 'Pay before' : 'Hold ended at'}>
+          <Detail label={detailLabel[hold.status]}>
             {formatDateTime(hold.expiresAt)}
           </Detail>
           <Detail label="Application ID">

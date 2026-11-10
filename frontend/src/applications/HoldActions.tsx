@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
@@ -11,6 +12,7 @@ import DialogContentText from '@mui/material/DialogContentText'
 import DialogTitle from '@mui/material/DialogTitle'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
+import { Link as RouterLink } from 'react-router'
 import { ApiError } from '../api/client'
 import { cancelHold, confirmHold } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
@@ -24,7 +26,11 @@ interface HoldActionsProps {
   hold: HoldDetails
 }
 
-/** Pay and cancel for one application; starts fresh whenever the student ID changes. */
+/**
+ * Pay and cancel for one application; starts fresh whenever the student ID changes.
+ * `hold.status` is the live status, so the moment the countdown reaches zero both
+ * actions are switched off.
+ */
 export function HoldActions({ hold }: HoldActionsProps) {
   const { studentId } = useStudentId()
   return <ActionsForStudent key={studentId ?? 'none'} hold={hold} studentId={studentId} />
@@ -68,6 +74,17 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
   })
 
   const noStudent = studentId === null
+  const held = hold.status === 'HELD'
+  const busy = pay.isPending || cancel.isPending
+
+  let payLabel = 'Pay admission fee'
+  if (pay.isPending) payLabel = 'Paying…'
+  else if (hold.status === 'CONFIRMED') payLabel = 'Fee paid'
+  else if (!held) payLabel = 'Payment closed'
+
+  let payIcon = <PaymentsRoundedIcon />
+  if (pay.isPending) payIcon = <CircularProgress size={16} color="inherit" />
+  else if (hold.status === 'CONFIRMED') payIcon = <CheckCircleRoundedIcon />
 
   return (
     <Stack spacing={1.5}>
@@ -75,23 +92,31 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
         <Button
           variant="contained"
           size="large"
-          disabled={noStudent || pay.isPending}
+          disabled={noStudent || !held || busy}
           onClick={() => pay.mutate()}
-          startIcon={pay.isPending ? <CircularProgress size={16} color="inherit" /> : <PaymentsRoundedIcon />}
+          startIcon={payIcon}
         >
-          {pay.isPending ? 'Paying…' : 'Pay admission fee'}
+          {payLabel}
         </Button>
-        <Button
-          variant="outlined"
-          color="error"
-          size="large"
-          disabled={noStudent || cancel.isPending}
-          onClick={() => setAsking(true)}
-        >
-          Cancel application
-        </Button>
+        {/* A paid admission cannot be cancelled here (no refunds); ended ones have nothing to cancel. */}
+        {held && (
+          <Button
+            variant="outlined"
+            color="error"
+            size="large"
+            disabled={noStudent || busy}
+            onClick={() => setAsking(true)}
+          >
+            Cancel application
+          </Button>
+        )}
+        {(hold.status === 'EXPIRED' || hold.status === 'CANCELLED') && (
+          <Button component={RouterLink} to="/" variant="outlined" size="large">
+            Apply again
+          </Button>
+        )}
       </Stack>
-      {noStudent && (
+      {noStudent && held && (
         <Typography variant="body2" color="text.secondary">
           Enter the student ID at the top of the page to pay or cancel.
         </Typography>
@@ -108,7 +133,7 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
       )}
 
       <Dialog
-        open={asking}
+        open={asking && held}
         onClose={() => !cancel.isPending && setAsking(false)}
         aria-labelledby="cancel-title"
         aria-describedby="cancel-text"
