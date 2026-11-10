@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography'
 import { useEffect, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Link as RouterLink } from 'react-router'
-import { ApiError } from '../api/client'
+import { describeError } from '../api/errorMessages'
 import { queryKeys } from '../api/queryClient'
 import type { HoldStatus, MyHold } from '../api/types'
 import { formatRemaining } from '../applications/formatRemaining'
@@ -127,7 +127,7 @@ function RowSkeletons() {
 
 function ApplicationsList({ studentId }: { studentId: string }) {
   const { data: holds, isPending, isError, error, refetch } = useMyHolds(studentId)
-  const message = error instanceof ApiError ? error.message : ''
+  const message = describeError(error)
 
   return (
     <Stack spacing={1.5} aria-busy={isPending}>

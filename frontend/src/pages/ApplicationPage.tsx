@@ -11,6 +11,7 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { Link as RouterLink, useParams } from 'react-router'
 import { ApiError } from '../api/client'
+import { describeError } from '../api/errorMessages'
 import { getClass } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
 import type { HoldDetails, HoldStatus } from '../api/types'
@@ -167,7 +168,7 @@ export function ApplicationPage() {
         >
           {notFound
             ? 'This application does not exist. The link may be incomplete or wrong; your applications are listed under My applications.'
-            : `The application could not be loaded. ${error instanceof ApiError ? error.message : ''}`}
+            : `The application could not be loaded. ${describeError(error)}`}
         </Alert>
       </Box>
     )

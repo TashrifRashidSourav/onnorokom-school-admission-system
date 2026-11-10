@@ -14,13 +14,12 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { Link as RouterLink } from 'react-router'
 import { ApiError } from '../api/client'
+import { describeError } from '../api/errorMessages'
 import { cancelHold, confirmHold } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
 import type { HoldDetails, HoldStatus } from '../api/types'
 import { useStudentId } from '../student/StudentIdContext'
 
-const errorMessage = (error: unknown, fallback: string) =>
-  error instanceof ApiError ? error.message : fallback
 
 interface HoldActionsProps {
   hold: HoldDetails
@@ -123,12 +122,12 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
       )}
       {pay.isError && (
         <Alert severity="error" variant="outlined">
-          {errorMessage(pay.error, 'The payment could not be sent. Please try again.')}
+          {describeError(pay.error, 'The payment could not be sent. Please try again.')}
         </Alert>
       )}
       {cancel.isError && (
         <Alert severity="error" variant="outlined">
-          {errorMessage(cancel.error, 'The application could not be cancelled. Please try again.')}
+          {describeError(cancel.error, 'The application could not be cancelled. Please try again.')}
         </Alert>
       )}
 

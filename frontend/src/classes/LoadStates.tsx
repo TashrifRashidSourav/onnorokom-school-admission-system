@@ -2,7 +2,7 @@ import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Paper from '@mui/material/Paper'
 import Skeleton from '@mui/material/Skeleton'
-import { ApiError } from '../api/client'
+import { describeError } from '../api/errorMessages'
 
 /** Placeholder cards while the classes load for the first time. */
 export function ClassCardSkeletons({ count = 3 }: { count?: number }) {
@@ -20,8 +20,7 @@ export function ClassCardSkeletons({ count = 3 }: { count?: number }) {
   )
 }
 
-const messageOf = (error: unknown) =>
-  error instanceof ApiError ? error.message : 'Something went wrong while loading the classes.'
+const messageOf = (error: unknown) => describeError(error, 'Something went wrong while loading the classes.')
 
 interface LoadErrorProps {
   error: unknown
