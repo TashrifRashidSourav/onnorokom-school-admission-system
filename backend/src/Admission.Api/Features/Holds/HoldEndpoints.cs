@@ -15,6 +15,7 @@ public static class HoldEndpoints
         app.MapGet("/holds/{holdId}", GetHoldAsync);
         app.MapPost("/holds/{holdId}/confirm", ConfirmHoldAsync);
         app.MapDelete("/holds/{holdId}", CancelHoldAsync);
+        app.MapGet("/me/holds", GetMyHoldsAsync);
 
         return app;
     }
@@ -270,6 +271,41 @@ public static class HoldEndpoints
         var status = hold.Status == HoldStatus.Held && hold.PastDue ? HoldStatus.Expired : hold.Status;
 
         return Results.Ok(new HoldDetailsResponse(hold.Id, hold.ClassId, status.ToApiString(), hold.ExpiresAt));
+    }
+
+    /// <summary>
+    /// GET /me/holds: every application of the student in X-Student-Id, in any status,
+    /// with the class name so the list reads without another request per row.
+    /// </summary>
+    private static async Task<IResult> GetMyHoldsAsync(
+        HttpRequest request, AdmissionDbContext db, CancellationToken cancellationToken)
+    {
+        if (!request.TryGetStudentId(out var studentId, out var studentIdError))
+        {
+            return studentIdError;
+        }
+
+        // PastDue is decided by the database clock (DateTime.UtcNow becomes now()).
+        var holds = await db.Holds.AsNoTracking()
+            .Where(h => h.StudentId == studentId.Value)
+            .Select(h => new
+            {
+                h.Id,
+                h.ClassId,
+                ClassName = h.Class!.Name,
+                h.Status,
+                h.ExpiresAt,
+                PastDue = h.ExpiresAt <= DateTime.UtcNow,
+            })
+            .ToListAsync(cancellationToken);
+
+        // Same rule as GET /holds/{holdId}: a HELD hold whose time ran out is EXPIRED.
+        return Results.Ok(holds.Select(h => new MyHoldResponse(
+            h.Id,
+            h.ClassId,
+            h.ClassName,
+            (h.Status == HoldStatus.Held && h.PastDue ? HoldStatus.Expired : h.Status).ToApiString(),
+            h.ExpiresAt)));
     }
 
     /// <summary>
