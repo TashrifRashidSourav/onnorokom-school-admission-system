@@ -1,4 +1,4 @@
-import { ApiError, NETWORK_ERROR } from './client'
+import { ApiError, NETWORK_ERROR, UNEXPECTED_RESPONSE } from './client'
 
 /**
  * Plain-language text for the backend's stable error codes. The UI owns this wording,
@@ -21,6 +21,8 @@ const messages: Record<string, string> = {
   unsupported_media_type: 'The request could not be read. Please reload the page and try again.',
   method_not_allowed: 'This action is not available. Please reload the page and try again.',
   internal_error: 'Something went wrong on the server. Please try again in a moment.',
+  [UNEXPECTED_RESPONSE]:
+    'The server sent an answer this page does not understand. Please reload the page; if it keeps happening, try again later.',
 }
 
 /**

@@ -1,4 +1,4 @@
-import { request } from './client'
+import { expectList, request } from './client'
 import type {
   ClassSummary,
   ConfirmedHold,
@@ -19,7 +19,7 @@ export const createClass = (input: CreateClassInput) =>
   request<CreatedClass>('/classes', { method: 'POST', body: input })
 
 /** 2. GET /classes: every class with its seat counts. */
-export const listClasses = () => request<ClassSummary[]>('/classes')
+export const listClasses = () => request<ClassSummary[]>('/classes').then(expectList)
 
 /** 3. GET /classes/{classId}: seat counts of one class. */
 export const getClass = (classId: string) => request<ClassSummary>(`/classes/${segment(classId)}`)
@@ -40,4 +40,4 @@ export const cancelHold = (holdId: string) =>
   request<void>(`/holds/${segment(holdId)}`, { method: 'DELETE' })
 
 /** 8. GET /me/holds: all applications of the current student. */
-export const listMyHolds = () => request<MyHold[]>('/me/holds')
+export const listMyHolds = () => request<MyHold[]>('/me/holds').then(expectList)

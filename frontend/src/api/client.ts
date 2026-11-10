@@ -26,6 +26,21 @@ export class ApiError extends Error {
   }
 }
 
+/** Error code used when the server's answer does not have the expected shape. */
+export const UNEXPECTED_RESPONSE = 'unexpected_response'
+
+/**
+ * Makes sure a list endpoint really returned a list. Anything else (an HTML error
+ * page from a proxy, a different API version) becomes a readable error instead of an
+ * empty or broken page.
+ */
+export function expectList<T>(value: T[]): T[] {
+  if (!Array.isArray(value)) {
+    throw new ApiError(200, UNEXPECTED_RESPONSE, 'The server sent an answer this page does not understand.')
+  }
+  return value
+}
+
 /** Header carrying the student's identity (17-digit birth registration number). */
 export const STUDENT_ID_HEADER = 'X-Student-Id'
 
