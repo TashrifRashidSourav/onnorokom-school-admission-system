@@ -59,6 +59,7 @@ All settings come from environment variables with defaults in `docker-compose.ym
 | Variable | Default | Purpose |
 |---|---|---|
 | `HOLD_DURATION_SECONDS` | `600` | How long a seat stays held before it expires |
+| `EXPIRY_SWEEP_SECONDS` | `5` | How often expired holds are saved as `EXPIRED` in the database; `0` turns this off. Seats are freed on time either way |
 | `API_URL` | `http://localhost:8080` | Backend URL the browser uses; written into `config.js` when the frontend container starts, so no rebuild is needed |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `admission` | Database settings; the backend's connection string (`ConnectionStrings__Default`) is built from them |
 | `FRONTEND_PORT` / `BACKEND_PORT` / `DB_PORT` | `3000` / `8080` / `5432` | Host ports, in case one is already in use |
@@ -100,7 +101,7 @@ stateDiagram-v2
 ```
 
 - **No overbooking:** creating a hold locks the class row in PostgreSQL, so `held + confirmed` can never exceed `totalSeats`, even with several backend processes on one database.
-- **Automatic release:** an expired hold stops counting the moment its time is up; nobody has to call an API.
+- **Automatic release:** an expired hold stops counting the moment its time is up; nobody has to call an API. A background sweeper then saves `EXPIRED` within a few seconds.
 - **Idempotent payment:** confirming the same hold twice counts the seat once.
 
 Details and the reasoning behind each decision are in [ASSUMPTIONS.md](ASSUMPTIONS.md).
