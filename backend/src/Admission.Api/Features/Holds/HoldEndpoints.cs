@@ -31,25 +31,33 @@ public static class HoldEndpoints
             return studentIdError;
         }
 
-        var totalSeats = await db.Classes
-            .Where(c => c.Id == classId)
-            .Select(c => (int?)c.TotalSeats)
-            .SingleOrDefaultAsync(cancellationToken);
-        if (totalSeats is null)
+        // One transaction per application. Locking the class row makes concurrent
+        // applications for the same class, from any backend process, run one after
+        // another, so the seat check and the insert can never interleave (no overbooking).
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var lockedClass = await db.Database
+            .SqlQuery<int>($"SELECT total_seats AS \"Value\" FROM classes WHERE id = {classId} FOR UPDATE")
+            .ToListAsync(cancellationToken);
+        if (lockedClass.Count == 0)
         {
             return ClassNotFound();
         }
+        var totalSeats = lockedClass[0];
+
+        // Read the clock after the lock is granted: waiting for the lock must not
+        // make an expired hold look active, nor shorten the new hold.
+        var now = await DatabaseNowAsync(db, cancellationToken);
 
         var takenSeats = await db.Holds.CountAsync(h => h.ClassId == classId
             && (h.Status == HoldStatus.Confirmed
-                || (h.Status == HoldStatus.Held && h.ExpiresAt > DateTime.UtcNow)),
+                || (h.Status == HoldStatus.Held && h.ExpiresAt > now)),
             cancellationToken);
         if (takenSeats >= totalSeats)
         {
             return ClassFull();
         }
 
-        var now = await DatabaseNowAsync(db, cancellationToken);
         var hold = new Hold
         {
             ClassId = classId,
@@ -59,13 +67,17 @@ public static class HoldEndpoints
         };
         db.Holds.Add(hold);
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Results.Created($"/holds/{hold.Id}", CreatedHoldResponse.From(hold));
     }
 
-    /// <summary>The database clock, which every backend process shares.</summary>
+    /// <summary>
+    /// The database clock, which every backend process shares. <c>clock_timestamp()</c> is
+    /// the real current time; <c>now()</c> would be frozen at the start of the transaction.
+    /// </summary>
     private static async Task<DateTime> DatabaseNowAsync(AdmissionDbContext db, CancellationToken cancellationToken) =>
-        (await db.Database.SqlQuery<DateTime>($"SELECT now() AS \"Value\"").ToListAsync(cancellationToken))[0];
+        (await db.Database.SqlQuery<DateTime>($"SELECT clock_timestamp() AS \"Value\"").ToListAsync(cancellationToken))[0];
 
     /// <summary>Drops fractions of a second, so <c>expiresAt</c> reads like <c>04:10:00Z</c>.</summary>
     private static DateTime WholeSeconds(DateTime value) =>
