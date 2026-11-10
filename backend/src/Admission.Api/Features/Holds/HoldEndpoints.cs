@@ -14,6 +14,7 @@ public static class HoldEndpoints
         app.MapPost("/classes/{classId}/holds", CreateHoldAsync);
         app.MapGet("/holds/{holdId}", GetHoldAsync);
         app.MapPost("/holds/{holdId}/confirm", ConfirmHoldAsync);
+        app.MapDelete("/holds/{holdId}", CancelHoldAsync);
 
         return app;
     }
@@ -34,13 +35,9 @@ public static class HoldEndpoints
             return studentIdError;
         }
 
-        // Lock the hold row: a confirm, a cancel or the expiry sweeper touching the same
-        // hold at the same moment, from any backend process, waits for this one to finish.
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        var hold = await db.Holds
-            .FromSql($"SELECT * FROM holds WHERE id = {holdId} FOR UPDATE")
-            .SingleOrDefaultAsync(cancellationToken);
+        var hold = await LockHoldAsync(db, holdId, cancellationToken);
         if (hold is null)
         {
             return HoldNotFound();
@@ -84,6 +81,46 @@ public static class HoldEndpoints
 
         return Results.Ok(new ConfirmedHoldResponse(hold.Id, hold.Status.ToApiString()));
     }
+
+    /// <summary>
+    /// DELETE /holds/{holdId}: the student withdraws the application. The held seat is
+    /// free for others at once. Returns 204 with no body.
+    /// </summary>
+    private static async Task<IResult> CancelHoldAsync(
+        string holdId,
+        HttpRequest request,
+        AdmissionDbContext db,
+        CancellationToken cancellationToken)
+    {
+        if (!request.TryGetStudentId(out _, out var studentIdError))
+        {
+            return studentIdError;
+        }
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var hold = await LockHoldAsync(db, holdId, cancellationToken);
+        if (hold is null)
+        {
+            return HoldNotFound();
+        }
+
+        hold.Status = HoldStatus.Cancelled;
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    /// <summary>
+    /// Loads a hold and locks its row until the transaction ends. A confirm, a cancel or
+    /// the expiry sweeper touching the same hold at the same moment, from any backend
+    /// process, waits for the first one to finish, so they never overwrite each other.
+    /// </summary>
+    private static Task<Hold?> LockHoldAsync(AdmissionDbContext db, string holdId, CancellationToken cancellationToken) =>
+        db.Holds
+            .FromSql($"SELECT * FROM holds WHERE id = {holdId} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken);
 
     /// <summary>
     /// POST /classes/{classId}/holds: a student applies for a seat. If a seat is free it is
