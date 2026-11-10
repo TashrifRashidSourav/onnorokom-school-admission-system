@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace Admission.Tests.Infrastructure;
 
@@ -26,12 +27,22 @@ public class PostgresApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseSetting("ConnectionStrings:Default", ConnectionString);
+        builder.UseSetting("ConnectionStrings:Default", WithSmallPool(ConnectionString));
         builder.UseSetting("Database:MigrateOnStartup", "true");
         // No background sweeps during tests: each test decides when holds are saved as
         // EXPIRED, so results never depend on timing. The sweeper has its own tests.
         builder.UseSetting(ExpirySweepSettings.ConfigKey, "0");
     }
+
+    /// <summary>
+    /// Caps each test app at 30 database connections. PostgreSQL accepts about 100 in
+    /// total, and Npgsql would otherwise open up to 100 per app: after the concurrency
+    /// tests fill one app's pool, a second app (e.g. one with 1-second holds) would get
+    /// "too many clients". Requests beyond 30 wait for a free connection, which still
+    /// makes them compete for the same rows.
+    /// </summary>
+    private static string WithSmallPool(string connectionString) =>
+        new NpgsqlConnectionStringBuilder(connectionString) { MaxPoolSize = 30 }.ConnectionString;
 
     /// <summary>Starts the app once per test run, which applies the migrations.</summary>
     public Task InitializeAsync()
