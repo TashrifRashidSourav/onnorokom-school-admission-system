@@ -2,10 +2,34 @@ import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
+import { ClassCard } from '../classes/ClassCard'
+import { useClasses } from '../classes/useClasses'
 import { HowItWorks } from '../components/HowItWorks'
+
+function NoClassesYet() {
+  return (
+    <Paper
+      sx={{
+        py: { xs: 5, md: 7 },
+        px: 3,
+        borderRadius: 3,
+        borderStyle: 'dashed',
+        textAlign: 'center',
+      }}
+    >
+      <SchoolOutlinedIcon color="disabled" sx={{ fontSize: 44, mb: 1 }} />
+      <Typography sx={{ fontWeight: 600 }}>No classes are open yet</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 420, mx: 'auto', mt: 0.5 }}>
+        Classes appear here as soon as the school opens them for admission. Please check back later.
+      </Typography>
+    </Paper>
+  )
+}
 
 /** Parent home: what online admission is, then every class with its seats. */
 export function ClassListPage() {
+  const { data: classes } = useClasses()
+
   return (
     <Box>
       <Box component="section" aria-labelledby="intro-title" sx={{ maxWidth: 720, mb: 3 }}>
@@ -30,28 +54,25 @@ export function ClassListPage() {
         <Typography id="classes-title" variant="h2" gutterBottom>
           Classes
         </Typography>
-        <Typography color="text.secondary">
+        <Typography color="text.secondary" sx={{ mb: 3 }}>
           Every class and shift with its total, held, confirmed and available seats.
         </Typography>
 
-        {/* Shown until classes exist; the class cards replace it once the list is loaded. */}
-        <Paper
-          sx={{
-            mt: 3,
-            py: { xs: 5, md: 7 },
-            px: 3,
-            borderRadius: 3,
-            borderStyle: 'dashed',
-            textAlign: 'center',
-          }}
-        >
-          <SchoolOutlinedIcon color="disabled" sx={{ fontSize: 44, mb: 1 }} />
-          <Typography sx={{ fontWeight: 600 }}>No classes are open yet</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 420, mx: 'auto', mt: 0.5 }}>
-            Classes appear here as soon as the school opens them for admission. Please check back
-            later.
-          </Typography>
-        </Paper>
+        {classes !== undefined && classes.length === 0 && <NoClassesYet />}
+
+        {classes !== undefined && classes.length > 0 && (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
+              gap: 2,
+            }}
+          >
+            {classes.map((seats) => (
+              <ClassCard key={seats.id} seats={seats} />
+            ))}
+          </Box>
+        )}
       </Box>
     </Box>
   )
