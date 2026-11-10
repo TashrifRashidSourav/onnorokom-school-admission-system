@@ -11,6 +11,10 @@ RUN npm ci --no-audit --no-fund
 COPY . .
 RUN npm run build
 
+# ---- test (only built when targeted: docker compose --profile test) ----
+FROM build AS test
+CMD ["npm", "test"]
+
 # ---- runtime ----
 FROM nginx:1.27-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf
