@@ -1,12 +1,18 @@
+import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogContentText from '@mui/material/DialogContentText'
+import DialogTitle from '@mui/material/DialogTitle'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { ApiError } from '../api/client'
-import { confirmHold } from '../api/endpoints'
+import { cancelHold, confirmHold } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
 import type { HoldDetails, HoldStatus } from '../api/types'
 import { useStudentId } from '../student/StudentIdContext'
@@ -53,6 +59,13 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
     onSuccess: (confirmed) => after.succeeded(confirmed.status),
     onError: after.failed,
   })
+  const [asking, setAsking] = useState(false)
+  const cancel = useMutation({
+    mutationFn: () => cancelHold(hold.holdId),
+    onSuccess: () => after.succeeded('CANCELLED'),
+    onError: after.failed,
+    onSettled: () => setAsking(false),
+  })
 
   const noStudent = studentId === null
 
@@ -68,6 +81,15 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
         >
           {pay.isPending ? 'Paying…' : 'Pay admission fee'}
         </Button>
+        <Button
+          variant="outlined"
+          color="error"
+          size="large"
+          disabled={noStudent || cancel.isPending}
+          onClick={() => setAsking(true)}
+        >
+          Cancel application
+        </Button>
       </Stack>
       {noStudent && (
         <Typography variant="body2" color="text.secondary">
@@ -79,6 +101,40 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
           {errorMessage(pay.error, 'The payment could not be sent. Please try again.')}
         </Alert>
       )}
+      {cancel.isError && (
+        <Alert severity="error" variant="outlined">
+          {errorMessage(cancel.error, 'The application could not be cancelled. Please try again.')}
+        </Alert>
+      )}
+
+      <Dialog
+        open={asking}
+        onClose={() => !cancel.isPending && setAsking(false)}
+        aria-labelledby="cancel-title"
+        aria-describedby="cancel-text"
+      >
+        <DialogTitle id="cancel-title">Cancel this application?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="cancel-text">
+            The held seat is released at once and may be taken by another student. You can apply
+            again later only if a seat is still free.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setAsking(false)} disabled={cancel.isPending} color="inherit">
+            Keep application
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => cancel.mutate()}
+            disabled={cancel.isPending}
+            startIcon={cancel.isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
+          >
+            {cancel.isPending ? 'Cancelling…' : 'Yes, cancel'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   )
 }
