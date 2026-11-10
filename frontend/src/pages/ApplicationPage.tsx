@@ -43,7 +43,7 @@ const detailLabel: Record<HoldStatus, string> = {
 
 function BackToClasses() {
   return (
-    <Button component={RouterLink} to="/" startIcon={<ArrowBackRoundedIcon />} color="inherit" sx={{ mb: 2, color: 'text.secondary' }}>
+    <Button component={RouterLink} to="/classes" startIcon={<ArrowBackRoundedIcon />} color="inherit" sx={{ mb: 2, color: 'text.secondary' }}>
       All classes
     </Button>
   )

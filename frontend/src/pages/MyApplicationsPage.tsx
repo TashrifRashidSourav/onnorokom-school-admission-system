@@ -154,7 +154,7 @@ function ApplicationsList({ studentId }: { studentId: string }) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Applications for this student appear here as soon as you apply for a seat.
           </Typography>
-          <Button component={RouterLink} to="/" variant="contained">
+          <Button component={RouterLink} to="/classes" variant="contained">
             See classes
           </Button>
         </EmptyState>

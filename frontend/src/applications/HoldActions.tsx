@@ -110,7 +110,7 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
           </Button>
         )}
         {(hold.status === 'EXPIRED' || hold.status === 'CANCELLED') && (
-          <Button component={RouterLink} to="/" variant="outlined" size="large">
+          <Button component={RouterLink} to="/classes" variant="outlined" size="large">
             Apply again
           </Button>
         )}

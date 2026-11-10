@@ -21,8 +21,10 @@ import { StudentIdHeaderButton, StudentIdPrompt } from '../student/StudentIdBar'
 
 /** Pages for parents applying on behalf of a student. No admin actions here. */
 const parentNavItems = [
-  { to: '/', label: 'Classes', end: true },
+  { to: '/', label: 'Home', end: true },
+  { to: '/classes', label: 'Classes & seats', end: false },
   { to: '/my-applications', label: 'My applications', end: false },
+  { to: '/help', label: 'Help', end: false },
 ]
 
 const activeBackground = 'rgba(var(--mui-palette-primary-mainChannel) / 0.08)'
