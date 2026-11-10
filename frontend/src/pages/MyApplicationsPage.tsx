@@ -1,5 +1,6 @@
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined'
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -89,9 +90,23 @@ function ApplicationRow({ hold: loaded }: { hold: MyHold }) {
             </Typography>
           )}
         </Box>
-        <Box sx={{ flexShrink: 0 }}>
+        <Stack
+          direction={{ xs: 'row', sm: 'column' }}
+          spacing={1}
+          sx={{ flexShrink: 0, alignItems: { xs: 'center', sm: 'flex-end' }, justifyContent: 'space-between' }}
+        >
           <HoldStatusChip status={hold.status} />
-        </Box>
+          <Button
+            component={RouterLink}
+            to={`/applications/${encodeURIComponent(hold.holdId)}`}
+            variant={hold.status === 'HELD' ? 'contained' : 'text'}
+            size="small"
+            endIcon={<ChevronRightRoundedIcon />}
+            aria-label={`${hold.status === 'HELD' ? 'Pay now' : 'View details'}: ${hold.className}`}
+          >
+            {hold.status === 'HELD' ? 'Pay now' : 'View details'}
+          </Button>
+        </Stack>
       </Stack>
     </Paper>
   )
