@@ -7,7 +7,7 @@ If the time runs out, the seat is released automatically for the next applicant.
 | | |
 |---|---|
 | **Backend** | .NET 8 Web API, EF Core, PostgreSQL (`backend/`) |
-| **Frontend** | React 18, Vite, TypeScript, TanStack Query (`frontend/`) |
+| **Frontend** | React 19, MUI 7, Vite, TypeScript, TanStack Query (`frontend/`) |
 | **Runtime** | Docker Compose — Docker is the only thing you need to install |
 
 > **Status:** in development. Sections marked _(pending #N)_ are filled in by the PR that closes issue N.
@@ -33,6 +33,17 @@ The first build takes a few minutes. When the logs settle, open:
 | PostgreSQL | `localhost:5432`, database/user/password `admission` (inside compose: `db:5432`) |
 
 The backend starts only after PostgreSQL reports healthy.
+
+### Using the app
+
+The frontend has two areas. No login is needed for either.
+
+| Area | URL | Who | What you can do |
+|---|---|---|---|
+| **Parent portal** | http://localhost:3000 | Parents | Enter the student's 17-digit birth registration number in the header, see classes and free seats, apply, pay before the hold expires, cancel, and see all applications under **My applications** |
+| **Admin console** | http://localhost:3000/admin | School staff | See every class with its seat counts and create a class with **New class** |
+
+The parent portal footer has a link to the admin console, and the console has a **View parent site** button to go back.
 
 | Command | Effect |
 |---|---|

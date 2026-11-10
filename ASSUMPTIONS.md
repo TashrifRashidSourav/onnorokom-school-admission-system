@@ -42,3 +42,8 @@ _(details added with #9 and #20)_
 | 16 | The student ID typed in the top bar is saved in `localStorage`. | Rule 11: after a refresh or browser restart the student must still see their applications. |
 | 17 | Seat counts and hold status refresh every few seconds by polling. | Simple and robust; meets "updates without reload" without adding WebSockets. |
 | 18 | The backend URL is injected when the frontend container starts (`config.js`), not at build time. | The brief requires changing it through an environment variable; Vite would otherwise bake it into the build. |
+| 19 | The UI has two areas: a **parent portal** at `/` (classes, application, my applications) and an **admin console** at `/admin` (classes table, "New class"). Parent pages do not link to admin actions; a small footer link leads to the console. | Parents and school staff do different jobs. Showing "Create class" next to "My applications" suggested parents could create classes. |
+| 20 | `/admin` has no sign-in. In real use it would sit behind staff authentication. | The brief says login is not needed, and the API has no admin role. |
+| 21 | The student ID field appears only in the parent header, not in the admin console. | Creating classes does not use `X-Student-Id`. |
+| 22 | The frontend uses **React 19**. | The brief asks for React 18 or newer; 19 is the current stable major and needs no extra code. |
+| 23 | Components come from **MUI 7** with a custom light theme (Inter font, deep blue primary). There is no dark mode. | MUI gives accessible inputs, dialogs, menus and notifications out of the box, so time goes into the admission logic rather than hand-written widgets. One light theme keeps the screens consistent. |
