@@ -15,6 +15,7 @@ import { getClass } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
 import type { HoldDetails, HoldStatus } from '../api/types'
 import { Countdown } from '../applications/Countdown'
+import { HoldActions } from '../applications/HoldActions'
 import { HoldStatusChip } from '../applications/HoldStatusChip'
 import { useHold } from '../applications/useHold'
 import { useNow } from '../applications/useNow'
@@ -30,6 +31,13 @@ const explanations: Record<HoldStatus, (expiresAt: string) => string> = {
   EXPIRED: () =>
     'The time to pay ran out and the seat was released. You can apply again if the class still has free seats.',
   CANCELLED: () => 'This application was cancelled and its seat was released.',
+}
+
+const detailLabel: Record<HoldStatus, string> = {
+  HELD: 'Pay before',
+  CONFIRMED: 'Payment deadline',
+  EXPIRED: 'Hold ended at',
+  CANCELLED: 'Hold would have ended at',
 }
 
 function BackToClasses() {
@@ -105,10 +113,12 @@ function ApplicationCard({ hold: loaded }: { hold: HoldDetails }) {
           {explanations[hold.status](hold.expiresAt)}
         </Typography>
 
+        <HoldActions hold={hold} />
+
         <Divider />
 
         <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-          <Detail label={hold.status === 'HELD' ? 'Pay before' : 'Hold ended at'}>
+          <Detail label={detailLabel[hold.status]}>
             {formatDateTime(hold.expiresAt)}
           </Detail>
           <Detail label="Application ID">
