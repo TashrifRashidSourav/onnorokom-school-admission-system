@@ -4,6 +4,7 @@ import Paper from '@mui/material/Paper'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import type { ClassSummary } from '../api/types'
+import { ApplyButton } from './ApplyButton'
 import { SeatBar } from './SeatBar'
 
 const formatCount = (value: number) => value.toLocaleString('en-US')
@@ -19,7 +20,7 @@ function Legend({ color, label, value }: { color: string; label: string; value: 
   )
 }
 
-/** One class on the parent home page: name, free seats and how the seats are used. */
+/** One class on the parent home page: name, free seats, how the seats are used, and Apply. */
 export function ClassCard({ seats }: { seats: ClassSummary }) {
   const full = seats.availableSeats <= 0
 
@@ -51,10 +52,14 @@ export function ClassCard({ seats }: { seats: ClassSummary }) {
 
       <SeatBar seats={seats} />
 
-      <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap', mt: 'auto' }}>
+      <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
         <Legend color="success.main" label="Confirmed" value={seats.confirmedSeats} />
         <Legend color="warning.light" label="Held" value={seats.heldSeats} />
       </Stack>
+
+      <Box sx={{ mt: 'auto', pt: 1 }}>
+        <ApplyButton seats={seats} />
+      </Box>
     </Paper>
   )
 }
