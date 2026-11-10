@@ -41,7 +41,7 @@ public class PostgresApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     /// "too many clients". Requests beyond 30 wait for a free connection, which still
     /// makes them compete for the same rows.
     /// </summary>
-    private static string WithSmallPool(string connectionString) =>
+    public static string WithSmallPool(string connectionString) =>
         new NpgsqlConnectionStringBuilder(connectionString) { MaxPoolSize = 30 }.ConnectionString;
 
     /// <summary>Starts the app once per test run, which applies the migrations.</summary>
