@@ -65,7 +65,8 @@ describe('application page countdown and payment', () => {
     const timer = await screen.findByRole('timer')
     expect(timer).toHaveTextContent('1:30')
     expect(payButton()).toBeEnabled()
-    expect(payButton()).toHaveTextContent('Pay admission fee')
+    expect(payButton()).toHaveTextContent('Pay admission fee · ভর্তি ফি দিন')
+    expect(screen.getByRole('button', { name: /cancel application · বাতিল/i })).toBeEnabled()
 
     await act(() => vi.advanceTimersByTimeAsync(5_000))
     expect(screen.getByRole('timer')).toHaveTextContent('1:25')
@@ -83,7 +84,7 @@ describe('application page countdown and payment', () => {
     expect(screen.queryByRole('timer')).not.toBeInTheDocument()
     expect(payButton()).toBeDisabled()
     expect(payButton()).toHaveTextContent('Payment closed')
-    expect(screen.queryByRole('button', { name: 'Cancel application' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cancel application/i })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Apply again' })).toBeInTheDocument()
   })
 
