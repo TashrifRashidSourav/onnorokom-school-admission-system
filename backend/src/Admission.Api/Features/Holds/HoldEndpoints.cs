@@ -13,8 +13,76 @@ public static class HoldEndpoints
     {
         app.MapPost("/classes/{classId}/holds", CreateHoldAsync);
         app.MapGet("/holds/{holdId}", GetHoldAsync);
+        app.MapPost("/holds/{holdId}/confirm", ConfirmHoldAsync);
 
         return app;
+    }
+
+    /// <summary>
+    /// POST /holds/{holdId}/confirm: the student pays the fee (simulated) and the held
+    /// seat becomes a confirmed admission. The seat was already counted while held, so
+    /// confirming does not change how many seats are taken.
+    /// </summary>
+    private static async Task<IResult> ConfirmHoldAsync(
+        string holdId,
+        HttpRequest request,
+        AdmissionDbContext db,
+        CancellationToken cancellationToken)
+    {
+        if (!request.TryGetStudentId(out var studentId, out var studentIdError))
+        {
+            return studentIdError;
+        }
+
+        // Lock the hold row: a confirm, a cancel or the expiry sweeper touching the same
+        // hold at the same moment, from any backend process, waits for this one to finish.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var hold = await db.Holds
+            .FromSql($"SELECT * FROM holds WHERE id = {holdId} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken);
+        if (hold is null)
+        {
+            return HoldNotFound();
+        }
+
+        // Only the student who applied may pay. Checked before the status, so a stranger
+        // learns nothing about someone else's application.
+        if (hold.StudentId != studentId.Value)
+        {
+            return NotYourApplication();
+        }
+
+        var now = await DatabaseNowAsync(db, cancellationToken);
+
+        // A HELD hold whose time ran out is expired even if the sweeper has not saved that
+        // yet. Save it now, so the seat it held is free for everyone from this moment.
+        if (hold.Status == HoldStatus.Held && hold.ExpiresAt <= now)
+        {
+            hold.Status = HoldStatus.Expired;
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return HoldExpired();
+        }
+
+        switch (hold.Status)
+        {
+            // Paying twice (a double click, a retried request) is not an error: answer
+            // exactly as the first time and change nothing, so the seat is counted once.
+            case HoldStatus.Confirmed:
+                return Results.Ok(new ConfirmedHoldResponse(hold.Id, hold.Status.ToApiString()));
+            case HoldStatus.Expired:
+                return HoldExpired();
+            case HoldStatus.Cancelled:
+                return HoldCancelled();
+        }
+
+        hold.Status = HoldStatus.Confirmed;
+        hold.ConfirmedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return Results.Ok(new ConfirmedHoldResponse(hold.Id, hold.Status.ToApiString()));
     }
 
     /// <summary>
@@ -153,6 +221,18 @@ public static class HoldEndpoints
     private static IResult AlreadyApplied() =>
         ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.AlreadyApplied,
             "This student already has an application for this class. Open My applications to see it.");
+
+    private static IResult NotYourApplication() =>
+        ApiResults.Error(StatusCodes.Status403Forbidden, ErrorCodes.NotYourApplication,
+            "This application belongs to a different student. Check the student ID at the top of the page.");
+
+    private static IResult HoldExpired() =>
+        ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.HoldExpired,
+            "The time to pay for this application has run out, so the seat was released. Apply again if a seat is free.");
+
+    private static IResult HoldCancelled() =>
+        ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.HoldCancelled,
+            "This application was cancelled, so it can no longer be paid for. Apply again if a seat is free.");
 
     private static IResult ClassFull() =>
         ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.ClassFull,
