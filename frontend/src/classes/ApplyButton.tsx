@@ -40,8 +40,13 @@ function ApplyForStudent({ seats, studentId }: ApplyButtonProps & { studentId: s
       queryClient.setQueryData(queryKeys.hold(hold.holdId), details)
       void navigate(`/applications/${encodeURIComponent(hold.holdId)}`)
     },
-    // Seat counts change whether the application succeeded or the class turned out full.
-    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.classes }),
+    // Seat counts change whether the application succeeded or the class turned out full;
+    // a new application also belongs at the top of My applications.
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.classes }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.myHolds }),
+      ]),
   })
 
   const full = seats.availableSeats <= 0
