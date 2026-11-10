@@ -17,3 +17,8 @@ public sealed record CreatedHoldResponse(
     public static CreatedHoldResponse From(Hold hold) =>
         new(hold.Id, hold.ClassId, hold.StudentId, hold.Status.ToApiString(), hold.ExpiresAt);
 }
+
+/// <summary>
+/// Response of <c>GET /holds/{holdId}</c>: <c>{ "holdId", "classId", "status", "expiresAt" }</c>.
+/// </summary>
+public sealed record HoldDetailsResponse(string HoldId, string ClassId, string Status, DateTime ExpiresAt);
