@@ -49,9 +49,25 @@ public static class HoldEndpoints
         // make an expired hold look active, nor shorten the new hold.
         var now = await DatabaseNowAsync(db, cancellationToken);
 
+        // Holds whose time ran out free their seat now, even before the background
+        // sweeper gets to them. This also lets a student apply again after an expiry.
+        await db.Holds
+            .Where(h => h.ClassId == classId && h.Status == HoldStatus.Held && h.ExpiresAt <= now)
+            .ExecuteUpdateAsync(set => set.SetProperty(h => h.Status, HoldStatus.Expired), cancellationToken);
+
+        // One active application (HELD or CONFIRMED) per student per class.
+        var alreadyApplied = await db.Holds.AnyAsync(h => h.ClassId == classId
+            && h.StudentId == studentId.Value
+            && (h.Status == HoldStatus.Held || h.Status == HoldStatus.Confirmed),
+            cancellationToken);
+        if (alreadyApplied)
+        {
+            return AlreadyApplied();
+        }
+
+        // Every remaining HELD hold is still running, so these two statuses are the taken seats.
         var takenSeats = await db.Holds.CountAsync(h => h.ClassId == classId
-            && (h.Status == HoldStatus.Confirmed
-                || (h.Status == HoldStatus.Held && h.ExpiresAt > now)),
+            && (h.Status == HoldStatus.Held || h.Status == HoldStatus.Confirmed),
             cancellationToken);
         if (takenSeats >= totalSeats)
         {
@@ -86,6 +102,10 @@ public static class HoldEndpoints
     private static IResult ClassNotFound() =>
         ApiResults.Error(StatusCodes.Status404NotFound, ErrorCodes.NotFound,
             "This class does not exist. It may have been entered incorrectly.");
+
+    private static IResult AlreadyApplied() =>
+        ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.AlreadyApplied,
+            "This student already has an application for this class. Open My applications to see it.");
 
     private static IResult ClassFull() =>
         ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.ClassFull,
