@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
+import MenuItem from '@mui/material/MenuItem'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import { describeError } from '../api/errorMessages'
@@ -17,6 +18,9 @@ import {
   validateSeats,
   type CreateClassErrors,
 } from '../pages/createClassValidation'
+
+const classLevels = ['Play', 'Nursery', 'KG', ...Array.from({ length: 10 }, (_, i) => `Class ${i + 1}`)]
+const shifts = ['Morning', 'Day', 'Evening']
 
 interface CreateClassFormProps {
   /** Called with the new class after the API created it; the form is then cleared. */
@@ -34,6 +38,17 @@ interface CreateClassFormProps {
  */
 export function CreateClassForm({ onCreated, onPendingChange, autoFocus = false, secondaryAction }: CreateClassFormProps) {
   const [name, setName] = useState('')
+  const [level, setLevel] = useState('')
+  const [shift, setShift] = useState('')
+  // Picking a class and a shift writes the name in the school's usual form; it can still be edited.
+  const pick = (nextLevel: string, nextShift: string) => {
+    setLevel(nextLevel)
+    setShift(nextShift)
+    if (nextLevel !== '' && nextShift !== '') {
+      setName(`${nextLevel} - ${nextShift} Shift`)
+      setErrors((current) => ({ ...current, name: undefined }))
+    }
+  }
   const [seats, setSeats] = useState('')
   const [errors, setErrors] = useState<CreateClassErrors>({})
   const queryClient = useQueryClient()
@@ -42,6 +57,8 @@ export function CreateClassForm({ onCreated, onPendingChange, autoFocus = false,
     mutationFn: createClass,
     onSuccess: (createdClass) => {
       setName('')
+      setLevel('')
+      setShift('')
       setSeats('')
       setErrors({})
       // Class lists must show the new class right away.
@@ -72,6 +89,23 @@ export function CreateClassForm({ onCreated, onPendingChange, autoFocus = false,
     <Stack component="form" onSubmit={handleSubmit} noValidate spacing={2.5}>
       {mutation.isError && <Alert severity="error">{errorMessage(mutation.error)}</Alert>}
 
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+        <TextField select label="Class" value={level} onChange={(event) => pick(event.target.value, shift)}>
+          {classLevels.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField select label="Shift" value={shift} onChange={(event) => pick(level, event.target.value)}>
+          {shifts.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Stack>
+
       <TextField
         label="Class name"
         placeholder="Class 6 - Morning Shift"
@@ -84,7 +118,7 @@ export function CreateClassForm({ onCreated, onPendingChange, autoFocus = false,
         }}
         onBlur={() => name !== '' && setErrors((current) => ({ ...current, name: validateClassName(name) }))}
         error={errors.name !== undefined}
-        helperText={errors.name}
+        helperText={errors.name ?? 'Filled in from Class and Shift, or type any name. Each shift is its own class.'}
       />
 
       <TextField
