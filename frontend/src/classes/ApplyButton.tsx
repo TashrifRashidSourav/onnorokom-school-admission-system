@@ -4,17 +4,15 @@ import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
+import { useNavigate } from 'react-router'
 import { ApiError } from '../api/client'
 import { applyForSeat } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
-import type { ClassSummary } from '../api/types'
+import type { ClassSummary, HoldDetails } from '../api/types'
 import { useStudentId } from '../student/StudentIdContext'
 
 const errorMessage = (error: unknown) =>
   error instanceof ApiError ? error.message : 'The application could not be sent. Please try again.'
-
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
 interface ApplyButtonProps {
   seats: ClassSummary
@@ -28,8 +26,20 @@ export function ApplyButton({ seats }: ApplyButtonProps) {
 
 function ApplyForStudent({ seats, studentId }: ApplyButtonProps & { studentId: string | null }) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const apply = useMutation({
     mutationFn: () => applyForSeat(seats.id),
+    onSuccess: (hold) => {
+      // The application page can show the new hold at once, without loading it again.
+      const details: HoldDetails = {
+        holdId: hold.holdId,
+        classId: hold.classId,
+        status: hold.status,
+        expiresAt: hold.expiresAt,
+      }
+      queryClient.setQueryData(queryKeys.hold(hold.holdId), details)
+      void navigate(`/applications/${encodeURIComponent(hold.holdId)}`)
+    },
     // Seat counts change whether the application succeeded or the class turned out full.
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.classes }),
   })
@@ -65,11 +75,6 @@ function ApplyForStudent({ seats, studentId }: ApplyButtonProps & { studentId: s
       {apply.isError && (
         <Alert severity="error" variant="outlined">
           {errorMessage(apply.error)}
-        </Alert>
-      )}
-      {apply.isSuccess && (
-        <Alert severity="success" variant="outlined">
-          Seat held until {formatTime(apply.data.expiresAt)}.
         </Alert>
       )}
     </Stack>
