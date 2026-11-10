@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, type ReactNode } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -14,8 +14,10 @@ import { ApiError } from '../api/client'
 import { getClass } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
 import type { HoldDetails, HoldStatus } from '../api/types'
+import { Countdown } from '../applications/Countdown'
 import { HoldStatusChip } from '../applications/HoldStatusChip'
 import { useHold } from '../applications/useHold'
+import { useNow } from '../applications/useNow'
 import { monoFontFamily } from '../theme'
 
 const formatDateTime = (iso: string) =>
@@ -49,11 +51,36 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function ApplicationCard({ hold }: { hold: HoldDetails }) {
+/**
+ * The hold as it is right now. A HELD hold becomes EXPIRED the second its time runs
+ * out, on screen, without waiting for the next server response or a page reload.
+ */
+function useLiveHold(hold: HoldDetails) {
+  const queryClient = useQueryClient()
+  const running = hold.status === 'HELD'
+  const now = useNow(running)
+  const remainingMs = Date.parse(hold.expiresAt) - now
+  const expiredNow = running && remainingMs <= 0
+
+  useEffect(() => {
+    if (expiredNow) {
+      // The server agrees (it judges by its own clock); reload the hold and the seats.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.hold(hold.holdId) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes })
+    }
+  }, [expiredNow, hold.holdId, queryClient])
+
+  const status: HoldStatus = expiredNow ? 'EXPIRED' : hold.status
+  return { status, remainingMs }
+}
+
+function ApplicationCard({ hold: loaded }: { hold: HoldDetails }) {
   const { data: schoolClass } = useQuery({
-    queryKey: queryKeys.class(hold.classId),
-    queryFn: () => getClass(hold.classId),
+    queryKey: queryKeys.class(loaded.classId),
+    queryFn: () => getClass(loaded.classId),
   })
+  const { status, remainingMs } = useLiveHold(loaded)
+  const hold = { ...loaded, status }
 
   return (
     <Paper sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3 }}>
@@ -72,7 +99,11 @@ function ApplicationCard({ hold }: { hold: HoldDetails }) {
           </Box>
         </Stack>
 
-        <Typography color="text.secondary">{explanations[hold.status](hold.expiresAt)}</Typography>
+        {hold.status === 'HELD' && <Countdown remainingMs={remainingMs} />}
+
+        <Typography color="text.secondary" role="status">
+          {explanations[hold.status](hold.expiresAt)}
+        </Typography>
 
         <Divider />
 
