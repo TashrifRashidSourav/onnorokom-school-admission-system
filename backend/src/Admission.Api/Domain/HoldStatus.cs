@@ -11,3 +11,9 @@ public enum HoldStatus
     Expired,
     Cancelled,
 }
+
+public static class HoldStatusText
+{
+    /// <summary>The status as the API returns it, e.g. <c>HELD</c>.</summary>
+    public static string ToApiString(this HoldStatus status) => status.ToString().ToUpperInvariant();
+}

@@ -1,6 +1,7 @@
 using Admission.Api.Data;
 using Admission.Api.Errors;
 using Admission.Api.Features.Classes;
+using Admission.Api.Features.Holds;
 using Admission.Api.Students;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 // appsettings.json has a localhost default for running outside Docker.
 builder.Services.AddDbContext<AdmissionDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+// Hold length from HOLD_DURATION_SECONDS (default 600); a bad value stops startup with a clear message.
+builder.Services.AddSingleton(HoldSettings.FromConfiguration(builder.Configuration));
 
 // Unhandled exceptions become JSON error bodies (see ApiExceptionHandler).
 // AddProblemDetails is required by UseExceptionHandler(); our handler always answers first.
@@ -46,6 +50,7 @@ app.UseCors();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.MapClassEndpoints();
+app.MapHoldEndpoints();
 
 app.Run();
 
