@@ -51,13 +51,8 @@ public static class HoldEndpoints
         }
 
         var now = await DatabaseNowAsync(db, cancellationToken);
-
-        // A HELD hold whose time ran out is expired even if the sweeper has not saved that
-        // yet. Save it now, so the seat it held is free for everyone from this moment.
-        if (hold.Status == HoldStatus.Held && hold.ExpiresAt <= now)
+        if (await ExpireIfPastDueAsync(db, hold, now, cancellationToken))
         {
-            hold.Status = HoldStatus.Expired;
-            await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return HoldExpired();
         }
@@ -92,7 +87,7 @@ public static class HoldEndpoints
         AdmissionDbContext db,
         CancellationToken cancellationToken)
     {
-        if (!request.TryGetStudentId(out _, out var studentIdError))
+        if (!request.TryGetStudentId(out var studentId, out var studentIdError))
         {
             return studentIdError;
         }
@@ -103,6 +98,30 @@ public static class HoldEndpoints
         if (hold is null)
         {
             return HoldNotFound();
+        }
+
+        if (hold.StudentId != studentId.Value)
+        {
+            return NotYourApplication();
+        }
+
+        var now = await DatabaseNowAsync(db, cancellationToken);
+        if (await ExpireIfPastDueAsync(db, hold, now, cancellationToken))
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return HoldExpired();
+        }
+
+        // Only a seat that is still held can be given back. A paid admission stays: a
+        // refund flow is out of scope.
+        switch (hold.Status)
+        {
+            case HoldStatus.Confirmed:
+                return AlreadyConfirmed();
+            case HoldStatus.Expired:
+                return HoldExpired();
+            case HoldStatus.Cancelled:
+                return AlreadyCancelled();
         }
 
         hold.Status = HoldStatus.Cancelled;
@@ -121,6 +140,23 @@ public static class HoldEndpoints
         db.Holds
             .FromSql($"SELECT * FROM holds WHERE id = {holdId} FOR UPDATE")
             .SingleOrDefaultAsync(cancellationToken);
+
+    /// <summary>
+    /// A HELD hold whose time ran out is expired even if the sweeper has not saved that
+    /// yet. Saves it as EXPIRED, so the seat it held is free for everyone from this moment.
+    /// </summary>
+    private static async Task<bool> ExpireIfPastDueAsync(
+        AdmissionDbContext db, Hold hold, DateTime now, CancellationToken cancellationToken)
+    {
+        if (hold.Status != HoldStatus.Held || hold.ExpiresAt > now)
+        {
+            return false;
+        }
+
+        hold.Status = HoldStatus.Expired;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 
     /// <summary>
     /// POST /classes/{classId}/holds: a student applies for a seat. If a seat is free it is
@@ -270,6 +306,14 @@ public static class HoldEndpoints
     private static IResult HoldCancelled() =>
         ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.HoldCancelled,
             "This application was cancelled, so it can no longer be paid for. Apply again if a seat is free.");
+
+    private static IResult AlreadyCancelled() =>
+        ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.HoldCancelled,
+            "This application is already cancelled.");
+
+    private static IResult AlreadyConfirmed() =>
+        ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.HoldConfirmed,
+            "The fee for this application is already paid, so the admission cannot be cancelled here.");
 
     private static IResult ClassFull() =>
         ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.ClassFull,
