@@ -288,6 +288,10 @@ public static class HoldEndpoints
         // PastDue is decided by the database clock (DateTime.UtcNow becomes now()).
         var holds = await db.Holds.AsNoTracking()
             .Where(h => h.StudentId == studentId.Value)
+            // Newest application first: the one just made is at the top. Id breaks ties,
+            // so the order is the same on every request.
+            .OrderByDescending(h => h.CreatedAt)
+            .ThenByDescending(h => h.Id)
             .Select(h => new
             {
                 h.Id,
