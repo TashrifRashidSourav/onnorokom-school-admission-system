@@ -3,6 +3,7 @@ import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
 import { ClassCard } from '../classes/ClassCard'
+import { ClassCardSkeletons, ClassesLoadError } from '../classes/LoadStates'
 import { useClasses } from '../classes/useClasses'
 import { HowItWorks } from '../components/HowItWorks'
 
@@ -28,7 +29,7 @@ function NoClassesYet() {
 
 /** Parent home: what online admission is, then every class with its seats. */
 export function ClassListPage() {
-  const { data: classes } = useClasses()
+  const { data: classes, isPending, isError, error, refetch } = useClasses()
 
   return (
     <Box>
@@ -58,17 +59,23 @@ export function ClassListPage() {
           Every class and shift with its total, held, confirmed and available seats.
         </Typography>
 
+        {isError && (
+          <ClassesLoadError error={error} stale={classes !== undefined} onRetry={() => void refetch()} />
+        )}
+
         {classes !== undefined && classes.length === 0 && <NoClassesYet />}
 
-        {classes !== undefined && classes.length > 0 && (
+        {(isPending || (classes !== undefined && classes.length > 0)) && (
           <Box
+            aria-busy={isPending}
             sx={{
               display: 'grid',
               gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
               gap: 2,
             }}
           >
-            {classes.map((seats) => (
+            {isPending && <ClassCardSkeletons />}
+            {classes?.map((seats) => (
               <ClassCard key={seats.id} seats={seats} />
             ))}
           </Box>
