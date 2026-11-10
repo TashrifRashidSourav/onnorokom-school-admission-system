@@ -4,8 +4,9 @@ import { useSyncExternalStore } from 'react'
  * How the server answered most recently, across every request of the app:
  * - `ok`: the last request got a normal answer (any 2xx or 4xx)
  * - `error`: the server failed with a 5xx
+ * - `unreachable`: no answer at all (server stopped, network down)
  */
-export type ServerStatus = 'ok' | 'error'
+export type ServerStatus = 'ok' | 'error' | 'unreachable'
 
 let current: ServerStatus = 'ok'
 const listeners = new Set<() => void>()

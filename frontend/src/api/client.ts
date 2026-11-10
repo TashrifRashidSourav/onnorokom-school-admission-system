@@ -68,6 +68,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     })
   } catch {
+    reportServerStatus('unreachable')
     throw new ApiError(
       0,
       NETWORK_ERROR,
