@@ -113,14 +113,22 @@ public static class HoldEndpoints
     private static async Task<IResult> GetHoldAsync(
         string holdId, AdmissionDbContext db, CancellationToken cancellationToken)
     {
+        // PastDue is decided by the database clock (DateTime.UtcNow becomes now()).
         var hold = await db.Holds.AsNoTracking()
             .Where(h => h.Id == holdId)
-            .Select(h => new { h.Id, h.ClassId, h.Status, h.ExpiresAt })
+            .Select(h => new { h.Id, h.ClassId, h.Status, h.ExpiresAt, PastDue = h.ExpiresAt <= DateTime.UtcNow })
             .SingleOrDefaultAsync(cancellationToken);
 
-        return hold is null
-            ? HoldNotFound()
-            : Results.Ok(new HoldDetailsResponse(hold.Id, hold.ClassId, hold.Status.ToApiString(), hold.ExpiresAt));
+        if (hold is null)
+        {
+            return HoldNotFound();
+        }
+
+        // A HELD hold whose time ran out is EXPIRED the moment it runs out, even if the
+        // background sweeper has not saved that yet; its seat is already free.
+        var status = hold.Status == HoldStatus.Held && hold.PastDue ? HoldStatus.Expired : hold.Status;
+
+        return Results.Ok(new HoldDetailsResponse(hold.Id, hold.ClassId, status.ToApiString(), hold.ExpiresAt));
     }
 
     /// <summary>
