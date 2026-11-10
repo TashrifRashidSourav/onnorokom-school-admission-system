@@ -68,14 +68,30 @@ Example: `HOLD_DURATION_SECONDS=30 docker compose up -d` makes holds expire afte
 
 ## Running the tests
 
-_(pending #13, #19)_
-
 ```bash
-# Backend tests, including the concurrency test (uses its own test database)
+# Backend tests, including the concurrency tests (uses its own throwaway test database)
 docker compose --profile test run --rm backend-tests
 
 # Frontend tests (bonus)
 docker compose --profile test run --rm frontend-tests
+```
+
+_(Frontend tests: pending #19.)_
+
+The backend tests run against a real PostgreSQL, so locking and constraints behave exactly as in production. The concurrency tests send many requests at the same moment:
+
+| Test | Expected |
+|---|---|
+| 200 students apply at once for a 10-seat class | exactly 10 get `201`, 190 get `409 class_full`, none `500` |
+| One student sends 25 applications at once | one `201`, 24 × `409 already_applied`, one row stored |
+| Paying, cancelling, 50 new applications and 30 reads at once on a full class | `held + confirmed` never exceeds the total in any response or in the table |
+
+To run the backend tests without Docker for the app (needs the .NET 8 SDK):
+
+```bash
+docker compose --profile test up -d db-test      # test database on localhost:5433
+cd backend && dotnet test                        # all tests
+dotnet test --filter Category=Concurrency        # only the concurrency tests
 ```
 
 ## How it works
