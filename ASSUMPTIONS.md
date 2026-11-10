@@ -27,6 +27,7 @@ Each entry is added in the same pull request as the code that implements it.
 | 13 | Confirming an expired or cancelled hold returns `409`. Cancelling a hold that is not `HELD` returns `409`. | The action conflicts with the hold's current state. |
 | 14 | A `CONFIRMED` admission cannot be cancelled through the API. | Cancelling would need a refund flow, which is out of scope (payment is simulated). |
 | 15 | The hold's expiry time is taken from the database clock, not the app server clock. | With several backend processes, one clock means they can never disagree about whether a hold has expired. |
+| 24 | A held seat whose time ran out is reported as `EXPIRED` the moment it runs out. A background sweeper also saves `EXPIRED` in the database every `EXPIRY_SWEEP_SECONDS` (default 5; `0` turns it off). | Correctness never waits for the sweeper: seat counts and every read already treat the hold as expired. The sweeper only keeps the stored status true for anyone reading the database directly. |
 
 ## Concurrency (bonus: several backend processes)
 

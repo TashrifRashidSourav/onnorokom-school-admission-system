@@ -15,6 +15,11 @@ builder.Services.AddDbContext<AdmissionDbContext>(options =>
 // Hold length from HOLD_DURATION_SECONDS (default 600); a bad value stops startup with a clear message.
 builder.Services.AddSingleton(HoldSettings.FromConfiguration(builder.Configuration));
 
+// Saves EXPIRED for held seats whose time ran out, every EXPIRY_SWEEP_SECONDS (default 5).
+// Seats are freed on time without it; it keeps the stored status true.
+builder.Services.AddSingleton(ExpirySweepSettings.FromConfiguration(builder.Configuration));
+builder.Services.AddHostedService<HoldExpirySweeper>();
+
 // Unhandled exceptions become JSON error bodies (see ApiExceptionHandler).
 // AddProblemDetails is required by UseExceptionHandler(); our handler always answers first.
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();

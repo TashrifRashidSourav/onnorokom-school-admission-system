@@ -1,4 +1,5 @@
 using Admission.Api.Data;
+using Admission.Api.Features.Holds;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,9 @@ public class PostgresApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         builder.UseSetting("ConnectionStrings:Default", ConnectionString);
         builder.UseSetting("Database:MigrateOnStartup", "true");
+        // No background sweeps during tests: each test decides when holds are saved as
+        // EXPIRED, so results never depend on timing. The sweeper has its own tests.
+        builder.UseSetting(ExpirySweepSettings.ConfigKey, "0");
     }
 
     /// <summary>Starts the app once per test run, which applies the migrations.</summary>
