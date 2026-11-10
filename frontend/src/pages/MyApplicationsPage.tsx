@@ -7,12 +7,16 @@ import Paper from '@mui/material/Paper'
 import Skeleton from '@mui/material/Skeleton'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Link as RouterLink } from 'react-router'
 import { ApiError } from '../api/client'
+import { queryKeys } from '../api/queryClient'
 import type { HoldStatus, MyHold } from '../api/types'
+import { formatRemaining } from '../applications/formatRemaining'
 import { HoldStatusChip } from '../applications/HoldStatusChip'
 import { useMyHolds } from '../applications/useMyHolds'
+import { useNow } from '../applications/useNow'
 import { useStudentId } from '../student/StudentIdContext'
 
 const formatDateTime = (iso: string) =>
@@ -36,7 +40,32 @@ function EmptyState({ icon, title, children }: { icon: ReactNode; title: string;
   )
 }
 
-function ApplicationRow({ hold }: { hold: MyHold }) {
+/**
+ * A held seat counts down every second and turns EXPIRED the moment its time runs out,
+ * without waiting for the next reload; then the list and seat counts are fetched again.
+ */
+function useLiveStatus(hold: MyHold) {
+  const queryClient = useQueryClient()
+  const running = hold.status === 'HELD'
+  const now = useNow(running)
+  const remainingMs = Date.parse(hold.expiresAt) - now
+  const expiredNow = running && remainingMs <= 0
+
+  useEffect(() => {
+    if (expiredNow) {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myHolds })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.classes })
+    }
+  }, [expiredNow, queryClient])
+
+  const status: HoldStatus = expiredNow ? 'EXPIRED' : hold.status
+  return { status, remainingMs }
+}
+
+function ApplicationRow({ hold: loaded }: { hold: MyHold }) {
+  const { status, remainingMs } = useLiveStatus(loaded)
+  const hold = { ...loaded, status }
+
   return (
     <Paper component="article" aria-label={hold.className} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 3 }}>
       <Stack
@@ -49,6 +78,16 @@ function ApplicationRow({ hold }: { hold: MyHold }) {
           <Typography variant="body2" color="text.secondary">
             {summaries[hold.status](hold.expiresAt)}
           </Typography>
+          {hold.status === 'HELD' && (
+            <Typography
+              variant="body2"
+              role="timer"
+              data-testid="row-countdown"
+              sx={{ fontWeight: 600, color: remainingMs <= 60_000 ? 'warning.dark' : 'text.primary' }}
+            >
+              Time left to pay: {formatRemaining(remainingMs)}
+            </Typography>
+          )}
         </Box>
         <Box sx={{ flexShrink: 0 }}>
           <HoldStatusChip status={hold.status} />
