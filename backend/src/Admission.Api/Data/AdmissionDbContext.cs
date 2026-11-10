@@ -8,6 +8,9 @@ public class AdmissionDbContext(DbContextOptions<AdmissionDbContext> options) : 
     /// <summary>SQL filter for holds that occupy a seat. Kept in one place for the index.</summary>
     public const string ActiveHoldFilter = "status IN ('HELD', 'CONFIRMED')";
 
+    /// <summary>Unique index allowing one active hold per student per class.</summary>
+    public const string ActiveHoldIndex = "ux_holds_active_class_student";
+
     public DbSet<SchoolClass> Classes => Set<SchoolClass>();
 
     public DbSet<Hold> Holds => Set<Hold>();
@@ -69,7 +72,7 @@ public class AdmissionDbContext(DbContextOptions<AdmissionDbContext> options) : 
             entity.HasIndex(h => new { h.ClassId, h.StudentId })
                 .IsUnique()
                 .HasFilter(ActiveHoldFilter)
-                .HasDatabaseName("ux_holds_active_class_student");
+                .HasDatabaseName(ActiveHoldIndex);
         });
     }
 }

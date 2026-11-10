@@ -3,6 +3,7 @@ using Admission.Api.Domain;
 using Admission.Api.Errors;
 using Admission.Api.Students;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Admission.Api.Features.Holds;
 
@@ -82,11 +83,27 @@ public static class HoldEndpoints
             ExpiresAt = WholeSeconds(now + settings.Duration),
         };
         db.Holds.Add(hold);
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsDuplicateActiveHold(exception))
+        {
+            // Second line of defence: the unique index caught a duplicate that slipped past
+            // the check above. Answer like the check would, never with a 500.
+            return AlreadyApplied();
+        }
         await transaction.CommitAsync(cancellationToken);
 
         return Results.Created($"/holds/{hold.Id}", CreatedHoldResponse.From(hold));
     }
+
+    private static bool IsDuplicateActiveHold(DbUpdateException exception) =>
+        exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: AdmissionDbContext.ActiveHoldIndex,
+        };
 
     /// <summary>
     /// The database clock, which every backend process shares. <c>clock_timestamp()</c> is
