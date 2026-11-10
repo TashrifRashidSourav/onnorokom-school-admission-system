@@ -1,4 +1,5 @@
 import { config } from '../config'
+import { reportServerStatus } from './serverStatus'
 import type { ApiErrorBody } from './types'
 
 /** Error code used when the request never got an HTTP response (server down, offline). */
@@ -73,6 +74,8 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       'Cannot reach the server. Check your connection, or try again in a moment.',
     )
   }
+
+  reportServerStatus(response.status >= 500 ? 'error' : 'ok')
 
   if (response.status === 204) {
     return undefined as T

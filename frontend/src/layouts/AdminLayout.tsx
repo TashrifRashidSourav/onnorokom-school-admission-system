@@ -7,6 +7,7 @@ import Container from '@mui/material/Container'
 import IconButton from '@mui/material/IconButton'
 import Toolbar from '@mui/material/Toolbar'
 import { Link as RouterLink, Outlet } from 'react-router'
+import { ServerStatusBanner } from '../components/ServerStatusBanner'
 import { BrandLogo } from '../components/BrandLogo'
 
 /**
@@ -49,6 +50,8 @@ export function AdminLayout() {
           </Toolbar>
         </Container>
       </AppBar>
+
+      <ServerStatusBanner />
 
       <Container component="main" maxWidth="lg" sx={{ flex: 1, py: { xs: 3, md: 5 } }}>
         <Outlet />

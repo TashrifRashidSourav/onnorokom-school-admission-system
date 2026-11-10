@@ -13,6 +13,7 @@ import Stack from '@mui/material/Stack'
 import Toolbar from '@mui/material/Toolbar'
 import { NavLink, Outlet } from 'react-router'
 import { BrandLogo } from '../components/BrandLogo'
+import { ServerStatusBanner } from '../components/ServerStatusBanner'
 import { SiteFooter } from '../components/SiteFooter'
 import { StudentIdHeaderButton, StudentIdPrompt } from '../student/StudentIdBar'
 
@@ -102,6 +103,8 @@ export function ParentLayout() {
       </Drawer>
 
       <StudentIdPrompt />
+
+      <ServerStatusBanner />
 
       <Container component="main" maxWidth="lg" sx={{ flex: 1, py: { xs: 3, md: 5 } }}>
         <Outlet />
