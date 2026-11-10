@@ -76,8 +76,6 @@ docker compose --profile test run --rm backend-tests
 docker compose --profile test run --rm frontend-tests
 ```
 
-_(Frontend tests: pending #19.)_
-
 The backend tests run against a real PostgreSQL, so locking and constraints behave exactly as in production. The concurrency tests send many requests at the same moment:
 
 | Test | Expected |
@@ -86,12 +84,20 @@ The backend tests run against a real PostgreSQL, so locking and constraints beha
 | One student sends 25 applications at once | one `201`, 24 × `409 already_applied`, one row stored |
 | Paying, cancelling, 50 new applications and 30 reads at once on a full class | `held + confirmed` never exceeds the total in any response or in the table |
 
+The frontend tests (Vitest and React Testing Library) render real components in a simulated browser with a fake server and a fake clock. They cover student ID validation (exactly 17 digits, the message for a wrong ID, the ID sent with every request) and the application page: the countdown, Pay switching off the moment time runs out, and paying.
+
 To run the backend tests without Docker for the app (needs the .NET 8 SDK):
 
 ```bash
 docker compose --profile test up -d db-test      # test database on localhost:5433
 cd backend && dotnet test                        # all tests
 dotnet test --filter Category=Concurrency        # only the concurrency tests
+```
+
+To run the frontend tests without Docker (needs Node 22):
+
+```bash
+cd frontend && npm ci && npm test
 ```
 
 ## How it works
