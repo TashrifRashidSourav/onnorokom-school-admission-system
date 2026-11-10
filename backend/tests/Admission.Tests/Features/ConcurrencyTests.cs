@@ -36,6 +36,49 @@ public class ConcurrencyTests(PostgresApiFactory factory) : DatabaseTest(factory
         Assert.Equal(10, await ActiveHoldsInDatabaseAsync(classId));
     }
 
+    [Fact]
+    public async Task One_student_applying_many_times_at_once_gets_exactly_one_seat()
+    {
+        // A double-clicked or repeated "Apply": 25 identical requests from one student.
+        var classId = await CreateClassAsync(seats: 10);
+        var student = StudentId(1);
+
+        var responses = await AllAtOnceAsync(
+            Enumerable.Range(0, 25).Select(_ => Request(HttpMethod.Post, $"/classes/{classId}/holds", student)));
+
+        Assert.Equal(1, responses.Count(r => r.Status == HttpStatusCode.Created));
+        Assert.Equal(24, responses.Count(r => r.Status == HttpStatusCode.Conflict));
+        Assert.All(
+            responses.Where(r => r.Status == HttpStatusCode.Conflict),
+            r => Assert.Equal(ErrorCodes.AlreadyApplied, r.ErrorCode));
+
+        var seats = await SeatsAsync(classId);
+        Assert.Equal((1, 9), (seats.HeldSeats, seats.AvailableSeats));
+        Assert.Equal(1, await ActiveHoldsInDatabaseAsync(classId));
+    }
+
+    [Fact]
+    public async Task Duplicate_applications_mixed_with_other_students_still_give_one_seat_each()
+    {
+        // 10 students each send 5 applications at once for a 20-seat class.
+        var classId = await CreateClassAsync(seats: 20);
+        var students = Enumerable.Range(1, 10).Select(StudentId).ToList();
+
+        var responses = await AllAtOnceAsync(students
+            .SelectMany(s => Enumerable.Repeat(s, 5))
+            .Select(s => Request(HttpMethod.Post, $"/classes/{classId}/holds", s)));
+
+        Assert.Equal(10, responses.Count(r => r.Status == HttpStatusCode.Created));
+        Assert.Equal(40, responses.Count(r => r.ErrorCode == ErrorCodes.AlreadyApplied));
+        var perStudent = await Factory.WithDbAsync(db => db.Holds
+            .Where(h => h.ClassId == classId)
+            .GroupBy(h => h.StudentId)
+            .Select(g => g.Count())
+            .ToListAsync());
+        Assert.Equal(10, perStudent.Count);
+        Assert.All(perStudent, count => Assert.Equal(1, count));
+    }
+
     private async Task<string> CreateClassAsync(int seats)
     {
         var response = await Client.PostAsJsonAsync("/classes", new { name = "Class 6 - Morning Shift", totalSeats = seats });
