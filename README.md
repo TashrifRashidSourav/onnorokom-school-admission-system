@@ -67,6 +67,21 @@ All settings come from environment variables with defaults in `docker-compose.ym
 
 Example: `HOLD_DURATION_SECONDS=30 docker compose up -d` makes holds expire after 30 seconds, which is handy for trying out expiry.
 
+## Two backend processes (bonus)
+
+```bash
+docker compose --profile multi up -d    # adds a second backend on http://localhost:8081
+```
+
+Both backends share one database, and the seat rules hold across them: applications for the same class are serialized by a row lock in PostgreSQL, not inside one process. To check it with the real containers:
+
+```bash
+docker compose --profile test up -d db-test
+cd backend && MULTI_BACKEND_URLS=http://localhost:8080,http://localhost:8081 dotnet test --filter Category=MultiProcess
+```
+
+How and why it works is in [ASSUMPTIONS.md](ASSUMPTIONS.md#concurrency-bonus-several-backend-processes).
+
 ## Running the tests
 
 ```bash
