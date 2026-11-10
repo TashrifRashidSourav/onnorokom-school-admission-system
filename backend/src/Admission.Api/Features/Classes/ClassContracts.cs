@@ -18,3 +18,16 @@ public sealed record CreatedClassResponse(string Id, string Name, int TotalSeats
     public static CreatedClassResponse From(SchoolClass schoolClass) =>
         new(schoolClass.Id, schoolClass.Name, schoolClass.TotalSeats);
 }
+
+/// <summary>
+/// Item of <c>GET /classes</c> and body of <c>GET /classes/{classId}</c>:
+/// <c>{ "id", "name", "totalSeats", "heldSeats", "confirmedSeats", "availableSeats" }</c>.
+/// <c>availableSeats = totalSeats - heldSeats - confirmedSeats</c>.
+/// </summary>
+public sealed record ClassSummaryResponse(
+    string Id,
+    string Name,
+    int TotalSeats,
+    int HeldSeats,
+    int ConfirmedSeats,
+    int AvailableSeats);
