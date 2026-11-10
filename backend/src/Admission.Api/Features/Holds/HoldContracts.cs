@@ -27,3 +27,9 @@ public sealed record HoldDetailsResponse(string HoldId, string ClassId, string S
 /// Response of <c>POST /holds/{holdId}/confirm</c>: <c>{ "holdId", "status" }</c>.
 /// </summary>
 public sealed record ConfirmedHoldResponse(string HoldId, string Status);
+
+/// <summary>
+/// One item of <c>GET /me/holds</c>:
+/// <c>{ "holdId", "classId", "className", "status", "expiresAt" }</c>.
+/// </summary>
+public sealed record MyHoldResponse(string HoldId, string ClassId, string ClassName, string Status, DateTime ExpiresAt);
