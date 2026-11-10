@@ -24,7 +24,8 @@ services:
 
   backend:
     build: ./backend
-    environment:
+    image: school-admission-backend
+    environment: &backend-environment
       # At most DB_POOL_SIZE connections per backend process: PostgreSQL accepts 100 in
       # total, so several backends (see the multi profile) must share them.
       ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB:-admission};Username=${POSTGRES_USER:-admission};Password=${POSTGRES_PASSWORD:-admission};Maximum Pool Size=${DB_POOL_SIZE:-40}
@@ -36,6 +37,32 @@ services:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:
       db:
+        condition: service_healthy
+    # Healthy once /health answers, which is after the migrations ran at startup.
+    # The image has no curl, so bash's /dev/tcp sends the request.
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.0\r\n\r\n' >&3 && grep -q ' 200 ' <&3"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    restart: unless-stopped
+
+  # ---- multi profile: docker compose --profile multi up -d ----
+  # A second backend process on port 8081, same image and same database, to show that
+  # the seat rules hold across processes. Not started by a plain `docker compose up`.
+  backend2:
+    profiles: [multi]
+    build: ./backend
+    image: school-admission-backend
+    environment:
+      <<: *backend-environment
+      # Only the first backend creates or updates the schema; two processes doing it
+      # at once on a fresh database could collide.
+      Database__MigrateOnStartup: "false"
+    ports:
+      - "${BACKEND2_PORT:-8081}:8080"
+    depends_on:
+      backend:
         condition: service_healthy
     restart: unless-stopped
 
