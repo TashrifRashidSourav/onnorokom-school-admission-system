@@ -14,6 +14,7 @@ public static class HoldEndpoints
         app.MapPost("/classes/{classId}/holds", CreateHoldAsync);
         app.MapGet("/holds/{holdId}", GetHoldAsync);
         app.MapPost("/holds/{holdId}/confirm", ConfirmHoldAsync);
+        app.MapDelete("/holds/{holdId}", CancelHoldAsync);
 
         return app;
     }
@@ -34,13 +35,9 @@ public static class HoldEndpoints
             return studentIdError;
         }
 
-        // Lock the hold row: a confirm, a cancel or the expiry sweeper touching the same
-        // hold at the same moment, from any backend process, waits for this one to finish.
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        var hold = await db.Holds
-            .FromSql($"SELECT * FROM holds WHERE id = {holdId} FOR UPDATE")
-            .SingleOrDefaultAsync(cancellationToken);
+        var hold = await LockHoldAsync(db, holdId, cancellationToken);
         if (hold is null)
         {
             return HoldNotFound();
@@ -54,13 +51,8 @@ public static class HoldEndpoints
         }
 
         var now = await DatabaseNowAsync(db, cancellationToken);
-
-        // A HELD hold whose time ran out is expired even if the sweeper has not saved that
-        // yet. Save it now, so the seat it held is free for everyone from this moment.
-        if (hold.Status == HoldStatus.Held && hold.ExpiresAt <= now)
+        if (await ExpireIfPastDueAsync(db, hold, now, cancellationToken))
         {
-            hold.Status = HoldStatus.Expired;
-            await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return HoldExpired();
         }
@@ -83,6 +75,87 @@ public static class HoldEndpoints
         await transaction.CommitAsync(cancellationToken);
 
         return Results.Ok(new ConfirmedHoldResponse(hold.Id, hold.Status.ToApiString()));
+    }
+
+    /// <summary>
+    /// DELETE /holds/{holdId}: the student withdraws the application. The held seat is
+    /// free for others at once. Returns 204 with no body.
+    /// </summary>
+    private static async Task<IResult> CancelHoldAsync(
+        string holdId,
+        HttpRequest request,
+        AdmissionDbContext db,
+        CancellationToken cancellationToken)
+    {
+        if (!request.TryGetStudentId(out var studentId, out var studentIdError))
+        {
+            return studentIdError;
+        }
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var hold = await LockHoldAsync(db, holdId, cancellationToken);
+        if (hold is null)
+        {
+            return HoldNotFound();
+        }
+
+        if (hold.StudentId != studentId.Value)
+        {
+            return NotYourApplication();
+        }
+
+        var now = await DatabaseNowAsync(db, cancellationToken);
+        if (await ExpireIfPastDueAsync(db, hold, now, cancellationToken))
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return HoldExpired();
+        }
+
+        // Only a seat that is still held can be given back. A paid admission stays: a
+        // refund flow is out of scope.
+        switch (hold.Status)
+        {
+            case HoldStatus.Confirmed:
+                return AlreadyConfirmed();
+            case HoldStatus.Expired:
+                return HoldExpired();
+            case HoldStatus.Cancelled:
+                return AlreadyCancelled();
+        }
+
+        hold.Status = HoldStatus.Cancelled;
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    /// <summary>
+    /// Loads a hold and locks its row until the transaction ends. A confirm, a cancel or
+    /// the expiry sweeper touching the same hold at the same moment, from any backend
+    /// process, waits for the first one to finish, so they never overwrite each other.
+    /// </summary>
+    private static Task<Hold?> LockHoldAsync(AdmissionDbContext db, string holdId, CancellationToken cancellationToken) =>
+        db.Holds
+            .FromSql($"SELECT * FROM holds WHERE id = {holdId} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken);
+
+    /// <summary>
+    /// A HELD hold whose time ran out is expired even if the sweeper has not saved that
+    /// yet. Saves it as EXPIRED, so the seat it held is free for everyone from this moment.
+    /// </summary>
+    private static async Task<bool> ExpireIfPastDueAsync(
+        AdmissionDbContext db, Hold hold, DateTime now, CancellationToken cancellationToken)
+    {
+        if (hold.Status != HoldStatus.Held || hold.ExpiresAt > now)
+        {
+            return false;
+        }
+
+        hold.Status = HoldStatus.Expired;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     /// <summary>
@@ -233,6 +306,14 @@ public static class HoldEndpoints
     private static IResult HoldCancelled() =>
         ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.HoldCancelled,
             "This application was cancelled, so it can no longer be paid for. Apply again if a seat is free.");
+
+    private static IResult AlreadyCancelled() =>
+        ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.HoldCancelled,
+            "This application is already cancelled.");
+
+    private static IResult AlreadyConfirmed() =>
+        ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.HoldConfirmed,
+            "The fee for this application is already paid, so the admission cannot be cancelled here.");
 
     private static IResult ClassFull() =>
         ApiResults.Error(StatusCodes.Status409Conflict, ErrorCodes.ClassFull,

@@ -21,6 +21,7 @@ public static class ErrorCodes
     public const string NotYourApplication = "not_your_application";
     public const string HoldExpired = "hold_expired";
     public const string HoldCancelled = "hold_cancelled";
+    public const string HoldConfirmed = "hold_confirmed";
     public const string MethodNotAllowed = "method_not_allowed";
     public const string UnsupportedMediaType = "unsupported_media_type";
     public const string InternalError = "internal_error";
