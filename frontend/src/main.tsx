@@ -9,6 +9,7 @@ import '@fontsource-variable/inter'
 import './index.css'
 import App from './App.tsx'
 import { queryClient } from './api/queryClient'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { StudentIdProvider } from './student/StudentIdProvider'
 import { theme } from './theme'
 
@@ -19,7 +20,9 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <StudentIdProvider>
           <BrowserRouter>
-            <App />
+            <ErrorBoundary>
+              <App />
+            </ErrorBoundary>
           </BrowserRouter>
         </StudentIdProvider>
       </QueryClientProvider>
