@@ -16,6 +16,7 @@ public static class ErrorCodes
     public const string StudentIdRequired = "student_id_required";
     public const string InvalidStudentId = "invalid_student_id";
     public const string NotFound = "not_found";
+    public const string ClassFull = "class_full";
     public const string MethodNotAllowed = "method_not_allowed";
     public const string UnsupportedMediaType = "unsupported_media_type";
     public const string InternalError = "internal_error";
