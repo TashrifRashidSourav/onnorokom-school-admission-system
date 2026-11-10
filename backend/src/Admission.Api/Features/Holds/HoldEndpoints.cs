@@ -12,6 +12,7 @@ public static class HoldEndpoints
     public static IEndpointRouteBuilder MapHoldEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/classes/{classId}/holds", CreateHoldAsync);
+        app.MapGet("/holds/{holdId}", GetHoldAsync);
 
         return app;
     }
@@ -106,6 +107,31 @@ public static class HoldEndpoints
         };
 
     /// <summary>
+    /// GET /holds/{holdId}: current status of an application. Needs no X-Student-Id:
+    /// the API contract does not list it, and the hold id itself is not guessable.
+    /// </summary>
+    private static async Task<IResult> GetHoldAsync(
+        string holdId, AdmissionDbContext db, CancellationToken cancellationToken)
+    {
+        // PastDue is decided by the database clock (DateTime.UtcNow becomes now()).
+        var hold = await db.Holds.AsNoTracking()
+            .Where(h => h.Id == holdId)
+            .Select(h => new { h.Id, h.ClassId, h.Status, h.ExpiresAt, PastDue = h.ExpiresAt <= DateTime.UtcNow })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (hold is null)
+        {
+            return HoldNotFound();
+        }
+
+        // A HELD hold whose time ran out is EXPIRED the moment it runs out, even if the
+        // background sweeper has not saved that yet; its seat is already free.
+        var status = hold.Status == HoldStatus.Held && hold.PastDue ? HoldStatus.Expired : hold.Status;
+
+        return Results.Ok(new HoldDetailsResponse(hold.Id, hold.ClassId, status.ToApiString(), hold.ExpiresAt));
+    }
+
+    /// <summary>
     /// The database clock, which every backend process shares. <c>clock_timestamp()</c> is
     /// the real current time; <c>now()</c> would be frozen at the start of the transaction.
     /// </summary>
@@ -115,6 +141,10 @@ public static class HoldEndpoints
     /// <summary>Drops fractions of a second, so <c>expiresAt</c> reads like <c>04:10:00Z</c>.</summary>
     private static DateTime WholeSeconds(DateTime value) =>
         new(value.Ticks - value.Ticks % TimeSpan.TicksPerSecond, DateTimeKind.Utc);
+
+    private static IResult HoldNotFound() =>
+        ApiResults.Error(StatusCodes.Status404NotFound, ErrorCodes.NotFound,
+            "This application does not exist. The link may be incomplete or wrong.");
 
     private static IResult ClassNotFound() =>
         ApiResults.Error(StatusCodes.Status404NotFound, ErrorCodes.NotFound,
