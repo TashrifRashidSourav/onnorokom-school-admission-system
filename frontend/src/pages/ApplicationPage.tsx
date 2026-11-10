@@ -15,6 +15,7 @@ import { getClass } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
 import type { HoldDetails, HoldStatus } from '../api/types'
 import { Countdown } from '../applications/Countdown'
+import { HoldActions } from '../applications/HoldActions'
 import { HoldStatusChip } from '../applications/HoldStatusChip'
 import { useHold } from '../applications/useHold'
 import { useNow } from '../applications/useNow'
@@ -104,6 +105,8 @@ function ApplicationCard({ hold: loaded }: { hold: HoldDetails }) {
         <Typography color="text.secondary" role="status">
           {explanations[hold.status](hold.expiresAt)}
         </Typography>
+
+        <HoldActions hold={hold} />
 
         <Divider />
 
