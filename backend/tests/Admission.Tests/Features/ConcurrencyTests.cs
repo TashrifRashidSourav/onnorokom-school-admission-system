@@ -4,6 +4,7 @@ using System.Text.Json;
 using Admission.Api.Domain;
 using Admission.Api.Errors;
 using Admission.Api.Features.Classes;
+using Admission.Api.Features.Holds;
 using Admission.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -77,6 +78,59 @@ public class ConcurrencyTests(PostgresApiFactory factory) : DatabaseTest(factory
             .ToListAsync());
         Assert.Equal(10, perStudent.Count);
         Assert.All(perStudent, count => Assert.Equal(1, count));
+    }
+
+    [Fact]
+    public async Task Seat_counts_never_exceed_the_total_while_paying_cancelling_and_applying_at_once()
+    {
+        // A full 5-seat class. In one burst: 2 holders pay, 3 cancel, 50 new students
+        // apply for the seats being freed, and 30 readers watch the seat counts.
+        var classId = await CreateClassAsync(seats: 5);
+        var holders = Enumerable.Range(1, 5).Select(StudentId).ToList();
+        var holdIds = new List<string>();
+        foreach (var holder in holders)
+        {
+            var created = await Client.SendAsync(Request(HttpMethod.Post, $"/classes/{classId}/holds", holder));
+            holdIds.Add((await created.Content.ReadFromJsonAsync<CreatedHoldResponse>())!.HoldId);
+        }
+
+        var pays = Enumerable.Range(0, 2).Select(i => Request(HttpMethod.Post, $"/holds/{holdIds[i]}/confirm", holders[i]));
+        var cancels = Enumerable.Range(2, 3).Select(i => Request(HttpMethod.Delete, $"/holds/{holdIds[i]}", holders[i]));
+        var applies = Enumerable.Range(100, 50).Select(i => Request(HttpMethod.Post, $"/classes/{classId}/holds", StudentId(i)));
+        var reads = Enumerable.Range(0, 30).Select(_ => new HttpRequestMessage(HttpMethod.Get, $"/classes/{classId}"));
+
+        var responses = await AllAtOnceAsync(pays.Concat(cancels).Concat(applies).Concat(reads));
+
+        Assert.Equal(2, responses.Count(r => r.Status == HttpStatusCode.OK && r.Body.Contains("CONFIRMED")));
+        Assert.Equal(3, responses.Count(r => r.Status == HttpStatusCode.NoContent));
+
+        // Applications only win the seats freed so far; none may push the class past 5.
+        var newHolds = responses.Count(r => r.Status == HttpStatusCode.Created);
+        Assert.InRange(newHolds, 0, 3);
+
+        // Every snapshot taken during the burst is within the total.
+        var snapshots = responses
+            .Where(r => r.Status == HttpStatusCode.OK && r.Body.Contains("totalSeats"))
+            .Select(r => JsonSerializer.Deserialize<ClassSummaryResponse>(r.Body, JsonOptions)!)
+            .ToList();
+        Assert.Equal(30, snapshots.Count);
+        Assert.All(snapshots, s =>
+        {
+            Assert.InRange(s.HeldSeats + s.ConfirmedSeats, 0, s.TotalSeats);
+            Assert.Equal(s.TotalSeats - s.HeldSeats - s.ConfirmedSeats, s.AvailableSeats);
+        });
+
+        var after = await SeatsAsync(classId);
+        Assert.Equal((newHolds, 2, 3 - newHolds), (after.HeldSeats, after.ConfirmedSeats, after.AvailableSeats));
+
+        // The seats still free go to exactly that many of the next 20 applicants.
+        var nextWave = await AllAtOnceAsync(
+            Enumerable.Range(200, 20).Select(i => Request(HttpMethod.Post, $"/classes/{classId}/holds", StudentId(i))));
+        Assert.Equal(3 - newHolds, nextWave.Count(r => r.Status == HttpStatusCode.Created));
+
+        var full = await SeatsAsync(classId);
+        Assert.Equal((3, 2, 0), (full.HeldSeats, full.ConfirmedSeats, full.AvailableSeats));
+        Assert.Equal(5, await ActiveHoldsInDatabaseAsync(classId));
     }
 
     private async Task<string> CreateClassAsync(int seats)
