@@ -4,7 +4,7 @@ import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
-import { ApiError } from '../api/client'
+import { describeError } from '../api/errorMessages'
 import { createClass } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
 import type { CreatedClass } from '../api/types'
@@ -113,8 +113,5 @@ export function CreateClassForm({ onCreated, onPendingChange, autoFocus = false,
 }
 
 function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return `Could not create the class. ${error.message}`
-  }
-  return 'Could not create the class. Please try again.'
+  return `Could not create the class. ${describeError(error)}`
 }

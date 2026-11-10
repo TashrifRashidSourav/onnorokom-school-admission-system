@@ -5,14 +5,14 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { useNavigate } from 'react-router'
-import { ApiError } from '../api/client'
+import { describeError } from '../api/errorMessages'
 import { applyForSeat } from '../api/endpoints'
 import { queryKeys } from '../api/queryClient'
 import type { ClassSummary, HoldDetails } from '../api/types'
 import { useStudentId } from '../student/StudentIdContext'
 
 const errorMessage = (error: unknown) =>
-  error instanceof ApiError ? error.message : 'The application could not be sent. Please try again.'
+  describeError(error, 'The application could not be sent. Please try again.')
 
 interface ApplyButtonProps {
   seats: ClassSummary

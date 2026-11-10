@@ -1,4 +1,5 @@
 import { config } from '../config'
+import { reportServerStatus } from './serverStatus'
 import type { ApiErrorBody } from './types'
 
 /** Error code used when the request never got an HTTP response (server down, offline). */
@@ -23,6 +24,21 @@ export class ApiError extends Error {
   get isNetworkError(): boolean {
     return this.code === NETWORK_ERROR
   }
+}
+
+/** Error code used when the server's answer does not have the expected shape. */
+export const UNEXPECTED_RESPONSE = 'unexpected_response'
+
+/**
+ * Makes sure a list endpoint really returned a list. Anything else (an HTML error
+ * page from a proxy, a different API version) becomes a readable error instead of an
+ * empty or broken page.
+ */
+export function expectList<T>(value: T[]): T[] {
+  if (!Array.isArray(value)) {
+    throw new ApiError(200, UNEXPECTED_RESPONSE, 'The server sent an answer this page does not understand.')
+  }
+  return value
 }
 
 /** Header carrying the student's identity (17-digit birth registration number). */
@@ -67,12 +83,15 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     })
   } catch {
+    reportServerStatus('unreachable')
     throw new ApiError(
       0,
       NETWORK_ERROR,
       'Cannot reach the server. Check your connection, or try again in a moment.',
     )
   }
+
+  reportServerStatus(response.status >= 500 ? 'error' : 'ok')
 
   if (response.status === 204) {
     return undefined as T

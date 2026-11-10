@@ -6,7 +6,9 @@ import Chip from '@mui/material/Chip'
 import Container from '@mui/material/Container'
 import IconButton from '@mui/material/IconButton'
 import Toolbar from '@mui/material/Toolbar'
-import { Link as RouterLink, Outlet } from 'react-router'
+import { Link as RouterLink, Outlet, useLocation } from 'react-router'
+import { ErrorBoundary } from '../components/ErrorBoundary'
+import { ServerStatusBanner } from '../components/ServerStatusBanner'
 import { BrandLogo } from '../components/BrandLogo'
 
 /**
@@ -15,6 +17,8 @@ import { BrandLogo } from '../components/BrandLogo'
  * The brief requires no login, so the console is open; see ASSUMPTIONS.md.
  */
 export function AdminLayout() {
+  const { pathname } = useLocation()
+
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="sticky">
@@ -50,8 +54,13 @@ export function AdminLayout() {
         </Container>
       </AppBar>
 
+      <ServerStatusBanner />
+
       <Container component="main" maxWidth="lg" sx={{ flex: 1, py: { xs: 3, md: 5 } }}>
-        <Outlet />
+        {/* Keyed by path: a crash on one page is forgotten when moving to another. */}
+        <ErrorBoundary key={pathname} homePath="/admin">
+          <Outlet />
+        </ErrorBoundary>
       </Container>
     </Box>
   )
