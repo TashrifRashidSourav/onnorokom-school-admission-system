@@ -13,8 +13,46 @@ public static class HoldEndpoints
     {
         app.MapPost("/classes/{classId}/holds", CreateHoldAsync);
         app.MapGet("/holds/{holdId}", GetHoldAsync);
+        app.MapPost("/holds/{holdId}/confirm", ConfirmHoldAsync);
 
         return app;
+    }
+
+    /// <summary>
+    /// POST /holds/{holdId}/confirm: the student pays the fee (simulated) and the held
+    /// seat becomes a confirmed admission. The seat was already counted while held, so
+    /// confirming does not change how many seats are taken.
+    /// </summary>
+    private static async Task<IResult> ConfirmHoldAsync(
+        string holdId,
+        HttpRequest request,
+        AdmissionDbContext db,
+        CancellationToken cancellationToken)
+    {
+        if (!request.TryGetStudentId(out var studentId, out var studentIdError))
+        {
+            return studentIdError;
+        }
+
+        // Lock the hold row: a confirm, a cancel or the expiry sweeper touching the same
+        // hold at the same moment, from any backend process, waits for this one to finish.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var hold = await db.Holds
+            .FromSql($"SELECT * FROM holds WHERE id = {holdId} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken);
+        if (hold is null)
+        {
+            return HoldNotFound();
+        }
+
+        var now = await DatabaseNowAsync(db, cancellationToken);
+        hold.Status = HoldStatus.Confirmed;
+        hold.ConfirmedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return Results.Ok(new ConfirmedHoldResponse(hold.Id, hold.Status.ToApiString()));
     }
 
     /// <summary>
