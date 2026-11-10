@@ -67,6 +67,10 @@ public static class HoldEndpoints
 
         switch (hold.Status)
         {
+            // Paying twice (a double click, a retried request) is not an error: answer
+            // exactly as the first time and change nothing, so the seat is counted once.
+            case HoldStatus.Confirmed:
+                return Results.Ok(new ConfirmedHoldResponse(hold.Id, hold.Status.ToApiString()));
             case HoldStatus.Expired:
                 return HoldExpired();
             case HoldStatus.Cancelled:
