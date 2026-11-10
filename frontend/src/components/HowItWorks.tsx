@@ -57,7 +57,7 @@ export function HowItWorks() {
               display: 'grid',
               placeItems: 'center',
               color: 'primary.main',
-              bgcolor: 'rgba(29, 78, 216, 0.08)',
+              bgcolor: 'rgba(var(--mui-palette-primary-mainChannel) / 0.08)',
             }}
           >
             {step.icon}

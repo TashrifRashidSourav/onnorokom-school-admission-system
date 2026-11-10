@@ -19,7 +19,7 @@ export function Countdown({ remainingMs }: { remainingMs: number }) {
         alignItems: 'center',
         p: 2,
         borderRadius: 2,
-        bgcolor: urgent ? 'rgba(180, 83, 9, 0.08)' : 'rgba(29, 78, 216, 0.06)',
+        bgcolor: urgent ? 'rgba(180, 83, 9, 0.08)' : 'rgba(var(--mui-palette-primary-mainChannel) / 0.06)',
       }}
     >
       <TimerOutlinedIcon sx={{ fontSize: 32, color: urgent ? 'warning.main' : 'primary.main' }} />
