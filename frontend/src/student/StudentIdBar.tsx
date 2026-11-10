@@ -84,7 +84,7 @@ export function StudentIdPrompt() {
   }
 
   return (
-    <Box sx={{ bgcolor: 'rgba(var(--mui-palette-primary-mainChannel) / 0.05)', borderBottom: 1, borderColor: 'divider' }}>
+    <Box className="no-print" sx={{ bgcolor: 'rgba(var(--mui-palette-primary-mainChannel) / 0.05)', borderBottom: 1, borderColor: 'divider' }}>
       <Container maxWidth="lg" sx={{ py: 2 }}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}

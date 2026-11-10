@@ -10,7 +10,7 @@ import { school } from './schoolInfo'
 /** Thin band above the header: admission office contacts and the admission status. */
 export function TopInfoBar() {
   return (
-    <Box sx={{ bgcolor: 'primary.dark', color: 'primary.contrastText' }}>
+    <Box className="no-print" sx={{ bgcolor: 'primary.dark', color: 'primary.contrastText' }}>
       <Container maxWidth="lg">
         <Stack
           direction="row"
