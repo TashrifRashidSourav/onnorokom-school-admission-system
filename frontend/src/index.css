@@ -27,3 +27,16 @@ code {
 .muted {
   color: var(--mui-palette-text-secondary);
 }
+
+/* Printing an admission slip: only the slip, no site navigation or buttons. */
+@media print {
+  .no-print,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+}

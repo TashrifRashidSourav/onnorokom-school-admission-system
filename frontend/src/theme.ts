@@ -9,6 +9,7 @@ const fontFamily = [
   '-apple-system',
   '"Segoe UI"',
   'Roboto',
+  '"Noto Sans Bengali Variable"',
   '"Noto Sans Bengali"',
   'sans-serif',
 ].join(',')
@@ -20,7 +21,9 @@ export const theme = createTheme({
   cssVariables: true,
   palette: {
     mode: 'light',
-    primary: { main: '#1D4ED8', dark: '#1E40AF', light: '#3B82F6', contrastText: '#FFFFFF' },
+    // School colours: deep green with a gold accent, as on the crest.
+    primary: { main: '#0E6B4F', dark: '#0A4F3A', light: '#2E8B6B', contrastText: '#FFFFFF' },
+    secondary: { main: '#C9962B', dark: '#9C7317', light: '#E8C670', contrastText: '#1F1500' },
     success: { main: '#15803D' },
     warning: { main: '#B45309' },
     error: { main: '#B91C1C' },

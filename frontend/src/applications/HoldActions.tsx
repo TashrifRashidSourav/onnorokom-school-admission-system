@@ -76,7 +76,7 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
   const held = hold.status === 'HELD'
   const busy = pay.isPending || cancel.isPending
 
-  let payLabel = 'Pay admission fee'
+  let payLabel = 'Pay admission fee · ভর্তি ফি দিন'
   if (pay.isPending) payLabel = 'Paying…'
   else if (hold.status === 'CONFIRMED') payLabel = 'Fee paid'
   else if (!held) payLabel = 'Payment closed'
@@ -87,10 +87,11 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+      <Stack spacing={1.25}>
         <Button
           variant="contained"
           size="large"
+          fullWidth
           disabled={noStudent || !held || busy}
           onClick={() => pay.mutate()}
           startIcon={payIcon}
@@ -103,14 +104,15 @@ function ActionsForStudent({ hold, studentId }: HoldActionsProps & { studentId: 
             variant="outlined"
             color="error"
             size="large"
+            fullWidth
             disabled={noStudent || busy}
             onClick={() => setAsking(true)}
           >
-            Cancel application
+            Cancel application · বাতিল
           </Button>
         )}
         {(hold.status === 'EXPIRED' || hold.status === 'CANCELLED') && (
-          <Button component={RouterLink} to="/" variant="outlined" size="large">
+          <Button component={RouterLink} to="/classes" variant="outlined" size="large" fullWidth>
             Apply again
           </Button>
         )}

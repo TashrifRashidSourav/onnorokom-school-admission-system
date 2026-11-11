@@ -16,15 +16,18 @@ import { BrandLogo } from '../components/BrandLogo'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { ServerStatusBanner } from '../components/ServerStatusBanner'
 import { SiteFooter } from '../components/SiteFooter'
+import { TopInfoBar } from '../school/TopInfoBar'
 import { StudentIdHeaderButton, StudentIdPrompt } from '../student/StudentIdBar'
 
 /** Pages for parents applying on behalf of a student. No admin actions here. */
 const parentNavItems = [
-  { to: '/', label: 'Classes', end: true },
+  { to: '/', label: 'Home', end: true },
+  { to: '/classes', label: 'Classes & seats', end: false },
   { to: '/my-applications', label: 'My applications', end: false },
+  { to: '/help', label: 'Help', end: false },
 ]
 
-const activeBackground = 'rgba(29, 78, 216, 0.08)'
+const activeBackground = 'rgba(var(--mui-palette-primary-mainChannel) / 0.08)'
 
 /** Layout of the parent portal: app bar with logo and parent navigation. */
 export function ParentLayout() {
@@ -33,9 +36,10 @@ export function ParentLayout() {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <TopInfoBar />
       <AppBar position="sticky">
         <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 3 }, minHeight: { xs: 64 } }}>
+          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 3 }, minHeight: { xs: 64, md: 72 } }}>
             <IconButton
               edge="start"
               aria-label="Open menu"
@@ -115,7 +119,7 @@ export function ParentLayout() {
         </ErrorBoundary>
       </Container>
 
-      <SiteFooter />
+      <SiteFooter links={parentNavItems} />
     </Box>
   )
 }

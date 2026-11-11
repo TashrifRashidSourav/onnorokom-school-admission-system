@@ -36,14 +36,18 @@ The backend starts only after PostgreSQL reports healthy.
 
 ### Using the app
 
-The frontend has two areas. No login is needed for either.
+The frontend is the admission portal of **Onnorokom School & College**, a fictional school. English is the main language; the key buttons and headings also show Bangla, as on the brief (আবেদন করুন, ভর্তি ফি দিন, বাতিল). No login is needed.
 
-| Area | URL | Who | What you can do |
-|---|---|---|---|
-| **Parent portal** | http://localhost:3000 | Parents | Enter the student's 17-digit birth registration number in the header, see classes and free seats, apply, pay before the hold expires, cancel, and see all applications under **My applications** |
-| **Admin console** | http://localhost:3000/admin | School staff | See every class with its seat counts and create a class with **New class** |
+| Page | URL | What it shows |
+|---|---|---|
+| **Home** | http://localhost:3000 | Admission notice with live figures (seats available, classes open, confirmed admissions), how to apply, notice board, seats open now, admission rules |
+| **Classes & seats** | http://localhost:3000/classes | Every class and shift grouped by class, with total, held, confirmed and free seats (live), filters for class, shift and free seats, and **Apply · আবেদন করুন** |
+| **Application** | opened after applying | An admission slip: progress (Applied → Seat held → Fee paid → Admitted), countdown, **Pay admission fee · ভর্তি ফি দিন**, **Cancel application · বাতিল**, details, and **Print slip** once admitted |
+| **My applications** | http://localhost:3000/my-applications | Every application of the student with counts (awaiting payment, admitted, expired or cancelled) and filter tabs |
+| **Help** | http://localhost:3000/help | Answers to common questions, the admission office's contacts and the rules |
+| **Admin console** | http://localhost:3000/admin | For school staff: live admission figures, every class with its fill rate, search and sorting, and **New class** with Class and Shift pickers |
 
-The parent portal footer has a link to the admin console, and the console has a **View parent site** button to go back.
+Enter the student's 17-digit birth registration number at the top of any parent page to apply. The footer links to the admin console, and the console has a **View parent site** button.
 
 | Command | Effect |
 |---|---|

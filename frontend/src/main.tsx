@@ -6,6 +6,8 @@ import { ThemeProvider } from '@mui/material/styles'
 import { BrowserRouter } from 'react-router'
 // Inter, self-hosted (no request to a font CDN), one variable font file for all weights.
 import '@fontsource-variable/inter'
+// Bangla text (school name, key labels): self-hosted too, so it looks the same everywhere.
+import '@fontsource-variable/noto-sans-bengali'
 import './index.css'
 import App from './App.tsx'
 import { queryClient } from './api/queryClient'

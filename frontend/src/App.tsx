@@ -4,6 +4,8 @@ import { ParentLayout } from './layouts/ParentLayout'
 import { AdminClassesPage } from './pages/admin/AdminClassesPage'
 import { ApplicationPage } from './pages/ApplicationPage'
 import { ClassListPage } from './pages/ClassListPage'
+import { HelpPage } from './pages/HelpPage'
+import { HomePage } from './pages/HomePage'
 import { MyApplicationsPage } from './pages/MyApplicationsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
@@ -12,7 +14,9 @@ export default function App() {
     <Routes>
       {/* Parent portal: classes, applications, student ID. */}
       <Route element={<ParentLayout />}>
-        <Route index element={<ClassListPage />} />
+        <Route index element={<HomePage />} />
+        <Route path="classes" element={<ClassListPage />} />
+        <Route path="help" element={<HelpPage />} />
         <Route path="applications/:holdId" element={<ApplicationPage />} />
         <Route path="my-applications" element={<MyApplicationsPage />} />
         <Route path="*" element={<NotFoundPage />} />

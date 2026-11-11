@@ -53,9 +53,9 @@ function ApplyForStudent({ seats, studentId }: ApplyButtonProps & { studentId: s
   const noStudent = studentId === null
   const disabled = noStudent || full || apply.isPending || apply.isSuccess
 
-  let label = 'Apply for a seat'
+  let label = 'Apply · আবেদন করুন'
   if (apply.isPending) label = 'Applying…'
-  else if (full && !apply.isSuccess) label = 'Class is full'
+  else if (full && !apply.isSuccess) label = 'Class is full · আসন নেই'
 
   let hint: string | null = null
   if (noStudent) hint = 'Enter the student ID at the top of the page to apply.'

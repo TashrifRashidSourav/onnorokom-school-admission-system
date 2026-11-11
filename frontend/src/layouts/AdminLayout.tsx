@@ -24,7 +24,7 @@ export function AdminLayout() {
       <AppBar position="sticky">
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ gap: 2, minHeight: { xs: 64 } }}>
-            <BrandLogo to="/admin" subtitle="Admin console" />
+            <BrandLogo to="/admin" subtitle="Admin console · অ্যাডমিন" />
             <Chip
               label="School staff"
               size="small"
