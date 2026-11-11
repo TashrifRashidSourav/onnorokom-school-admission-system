@@ -10,8 +10,6 @@ If the time runs out, the seat is released automatically for the next applicant.
 | **Frontend** | React 19, MUI 7, Vite, TypeScript, TanStack Query (`frontend/`) |
 | **Runtime** | Docker Compose — Docker is the only thing you need to install |
 
-> **Status:** in development. Sections marked _(pending #N)_ are filled in by the PR that closes issue N.
-
 ---
 
 ## Quick start
