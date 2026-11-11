@@ -31,10 +31,17 @@ Each entry is added in the same pull request as the code that implements it.
 
 ## Concurrency (bonus: several backend processes)
 
-_(details added with #9 and #20)_
+The seat rules must hold with any number of backend processes on one database, so none of them relies on memory inside one process. Everything that must be decided once is decided by PostgreSQL:
 
-- Creating a hold runs in one transaction that first locks the class row (`SELECT … FOR UPDATE`). Concurrent requests for the same class, from any process, are processed one at a time, so the seat check and the insert cannot interleave.
-- A partial unique index on `(class_id, student_id)` for `HELD`/`CONFIRMED` rows is a second guard against duplicate active holds; a violation is turned into `409`.
+- **One application at a time per class.** Creating a hold runs in one transaction that first locks the class row (`SELECT … FOR UPDATE`). Applications for the same class, from any process, wait for each other, so the seat check and the insert can never interleave. Applications for different classes do not wait for each other.
+- **Duplicates.** A partial unique index on `(class_id, student_id)` for `HELD`/`CONFIRMED` rows is a second guard against two active applications by one student; a violation is answered with `409`, never `500`.
+- **Pay and cancel.** Both lock the hold's row, so two of them on the same hold (or a pay and a cancel) run one after another; paying twice confirms once.
+- **One clock.** Expiry is judged by the database clock, which every process shares, so two processes can never disagree about whether a hold has expired.
+- **Expiry sweeper.** Every process runs it. Its single `UPDATE … WHERE status = 'HELD' AND expires_at <= now()` is safe to repeat and to run at the same time: PostgreSQL re-checks the condition after waiting for a row lock, so a hold paid meanwhile is left alone.
+- **Schema changes.** Only the first backend applies migrations at startup; the second one waits until the first reports healthy, so two processes never create the schema at the same time.
+- **Connections.** Each process opens at most `DB_POOL_SIZE` (default 40) connections, so two fit within PostgreSQL's limit of 100.
+
+How it was checked: `docker compose --profile multi up -d` starts a second backend on port 8081 with the same database. Tests send 200 simultaneous applications for a 10-seat class alternately to both processes: exactly 10 succeed and both report the same seat counts. The same holds for duplicate applications and double payments. The tests run against two app instances by default, and against the real containers with `MULTI_BACKEND_URLS=http://localhost:8080,http://localhost:8081`. Removing the class-row lock makes them fail.
 
 ## Frontend
 

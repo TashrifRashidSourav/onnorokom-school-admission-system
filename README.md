@@ -66,9 +66,25 @@ All settings come from environment variables with defaults in `docker-compose.ym
 | `EXPIRY_SWEEP_SECONDS` | `5` | How often expired holds are saved as `EXPIRED` in the database; `0` turns this off. Seats are freed on time either way |
 | `API_URL` | `http://localhost:8080` | Backend URL the browser uses; written into `config.js` when the frontend container starts, so no rebuild is needed |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `admission` | Database settings; the backend's connection string (`ConnectionStrings__Default`) is built from them |
+| `DB_POOL_SIZE` | `40` | Most database connections one backend process may open. PostgreSQL accepts 100 in total, so two backends fit with room to spare; extra requests wait briefly for a free connection |
 | `FRONTEND_PORT` / `BACKEND_PORT` / `DB_PORT` | `3000` / `8080` / `5432` | Host ports, in case one is already in use |
 
 Example: `HOLD_DURATION_SECONDS=30 docker compose up -d` makes holds expire after 30 seconds, which is handy for trying out expiry.
+
+## Two backend processes (bonus)
+
+```bash
+docker compose --profile multi up -d    # adds a second backend on http://localhost:8081
+```
+
+Both backends share one database, and the seat rules hold across them: applications for the same class are serialized by a row lock in PostgreSQL, not inside one process. To check it with the real containers:
+
+```bash
+docker compose --profile test up -d db-test
+cd backend && MULTI_BACKEND_URLS=http://localhost:8080,http://localhost:8081 dotnet test --filter Category=MultiProcess
+```
+
+How and why it works is in [ASSUMPTIONS.md](ASSUMPTIONS.md#concurrency-bonus-several-backend-processes).
 
 ## Running the tests
 
